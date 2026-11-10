@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>mannaNAUTA Blocos</title>
+<script src="https://unpkg.com/blockly@11.2.2/blockly_compressed.js"></script>
+<script src="https://unpkg.com/blockly@11.2.2/blocks_compressed.js"></script>
+<script src="https://unpkg.com/blockly@11.2.2/msg/pt-br.js"></script>
+<style>
+  :root { --azul:#1d3557; --claro:#f1f5fb; --borda:#d5deea; --destaque:#ff7a00; }
+  * { box-sizing:border-box; }
+  html, body { margin:0; height:100%; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; color:#1b2430; }
+  body { display:flex; flex-direction:column; }
+  header { display:flex; align-items:center; gap:10px; padding:8px 12px; background:var(--azul); color:#fff; flex-wrap:wrap; }
+  header h1 { font-size:17px; margin:0 12px 0 0; font-weight:700; letter-spacing:.3px; }
+  header h1 span { color:var(--destaque); }
+  button, .botao { font:inherit; font-size:14px; border:0; border-radius:8px; padding:7px 12px; cursor:pointer; background:#ffffff22; color:#fff; }
+  button:hover, .botao:hover { background:#ffffff38; }
+  button.principal { background:var(--destaque); font-weight:700; }
+  button.principal:hover { background:#ff8f26; }
+  button:disabled { opacity:.5; cursor:default; }
+  .espaco { flex:1; }
+  #status { font-size:13px; opacity:.9; }
+  main { flex:1; display:flex; min-height:0; }
+  #areaBlocos { flex:1; min-width:0; }
+  aside { width:36%; min-width:260px; max-width:560px; display:flex; flex-direction:column; border-left:1px solid var(--borda); background:var(--claro); }
+  .abas { display:flex; border-bottom:1px solid var(--borda); }
+  .abas button { flex:1; color:#1b2430; background:transparent; border-radius:0; padding:9px; }
+  .abas button.ativa { background:#fff; font-weight:700; box-shadow: inset 0 -3px 0 var(--destaque); }
+  .painel { flex:1; overflow:auto; display:none; }
+  .painel.ativo { display:block; }
+  pre { margin:0; padding:12px; font-size:12.5px; line-height:1.45; white-space:pre; font-family: ui-monospace, Menlo, Consolas, monospace; }
+  #monitor { background:#0f1720; color:#c8f7c5; min-height:100%; }
+  .barraPainel { display:flex; gap:6px; padding:6px 8px; border-top:1px solid var(--borda); background:#fff; }
+  .barraPainel button { background:#e8eef6; color:#1b2430; }
+  .barraPainel button:hover { background:#dbe4f0; }
+  #aviso { display:none; background:#fff4e5; color:#7a3d00; padding:8px 12px; font-size:13px; border-bottom:1px solid #ffd59e; }
+  #progresso { height:4px; background:transparent; }
+  #progresso div { height:100%; width:0; background:var(--destaque); transition:width .2s; }
+  dialog { border:0; border-radius:12px; padding:18px; max-width:420px; }
+  dialog h2 { margin-top:0; font-size:18px; }
+  dialog input { width:100%; padding:8px; font-size:14px; border:1px solid var(--borda); border-radius:6px; }
+  dialog .acoes { display:flex; justify-content:flex-end; gap:8px; margin-top:14px; }
+  dialog button { background:#e8eef6; color:#1b2430; }
+  dialog button.principal { background:var(--destaque); color:#fff; }
+  @media (max-width: 760px) { main { flex-direction:column; } aside { width:100%; max-width:none; height:38%; border-left:0; border-top:1px solid var(--borda); } }
+</style>
+</head>
+<body>
+<header>
+  <h1>manna<span>NAUTA</span> Blocos</h1>
+  <button id="btNovo" title="Começar um programa novo">Novo</button>
+  <label class="botao" title="Abrir um projeto salvo">Abrir<input id="arquivo" type="file" accept=".json,.manna" hidden></label>
+  <button id="btSalvar" title="Baixar o projeto">Salvar</button>
+  <span class="espaco"></span>
+  <span id="status">Pronto</span>
+  <button id="btConfig" title="Endereço do servidor de compilação">⚙</button>
+  <button id="btEnviar" class="principal">Enviar para a placa</button>
+</header>
+<div id="progresso"><div></div></div>
+<div id="aviso"></div>
+<main>
+  <div id="areaBlocos"></div>
+  <aside>
+    <div class="abas">
+      <button data-aba="codigo" class="ativa">Código C++</button>
+      <button data-aba="monitor">Monitor serial</button>
+    </div>
+    <div id="painel-codigo" class="painel ativo"><pre id="codigo"></pre></div>
+    <div id="painel-monitor" class="painel"><pre id="monitor"></pre></div>
+    <div class="barraPainel">
+      <button id="btCopiar">Copiar código</button>
+      <button id="btMonitor">Conectar monitor</button>
+      <button id="btLimparMonitor">Limpar monitor</button>
+    </div>
+  </aside>
+</main>
+
+<dialog id="dlgConfig">
+  <h2>Servidor de compilação</h2>
+  <p style="font-size:14px">Endereço do servidor que transforma o código em programa para o ESP32-S3.</p>
+  <input id="urlServidor" placeholder="https://seu-servidor.onrender.com">
+  <div class="acoes"><button id="btCancelarCfg">Cancelar</button><button id="btSalvarCfg" class="principal">Salvar</button></div>
+</dialog>
+
+<script>
+/* =====================================================================
+   mannaNAUTA Blocos — editor de blocos para a placa mannaNAUTA (ESP32-S3)
+   Usa as bibliotecas livres de wuigor:
+     mannaNAUTA_WS2812_Lib  (matriz 5x5 de LEDs, pino 47)
+     mannaNAUTA_LSM6DS_Lib  (acelerômetro/giroscópio, SDA 5 / SCL 4)
+   ===================================================================== */
+
+// Endereço padrão do servidor de compilação (pode ser trocado no ⚙).
+const SERVIDOR_PADRAO = '';
+
+const armazenar = {
+  ler(k, padrao) { try { const v = localStorage.getItem(k); return v === null ? padrao : v; } catch (e) { return padrao; } },
+  gravar(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+};
+
+/* ---------------------------- Cores ---------------------------------- */
+const COR = { evento:'#FFBF00', controle:'#FFAB19', matriz:'#9966FF', cor:'#CF63CF', sensor:'#4CBF56', serial:'#0FBD8C', matematica:'#59C059', logica:'#5CB1D6', variavel:'#FF8C1A' };
+
+const CORES_NOMEADAS = [
+  ['🔴 vermelho', '0xFF0000'], ['🟢 verde', '0x00FF00'], ['🔵 azul', '0x0000FF'],
+  ['🟡 amarelo', '0xFFFF00'], ['🟠 laranja', '0xFF8000'], ['🟣 roxo', '0x8000FF'],
+  ['🩷 rosa', '0xFF3080'], ['🩵 ciano', '0x00FFFF'], ['⚪ branco', '0xFFFFFF'], ['⚫ apagado', '0x000000']
+];
+
+/* ---------------------------- Blocos --------------------------------- */
+const sombraCor = { shadow: { type: 'mn_cor', fields: { COR: '0x00FF00' } } };
+const sombraNum = (n) => ({ shadow: { type: 'math_number', fields: { NUM: n } } });
+
+Blockly.defineBlocksWithJsonArray([
+  // Eventos
+  { type:'mn_ao_ligar', message0:'quando a placa ligar %1 %2', args0:[{type:'input_dummy'},{type:'input_statement',name:'CORPO'}], colour:COR.evento, tooltip:'Roda uma vez, quando a placa liga.' },
+  { type:'mn_sempre', message0:'repetir para sempre %1 %2', args0:[{type:'input_dummy'},{type:'input_statement',name:'CORPO'}], colour:COR.evento, tooltip:'Roda sem parar, depois do "quando a placa ligar".' },
+
+  // Controle
+  { type:'mn_esperar', message0:'esperar %1 segundos', args0:[{type:'input_value',name:'S',check:'Number'}], previousStatement:null, nextStatement:null, colour:COR.controle, inputsInline:true },
+  { type:'mn_esperar_ms', message0:'esperar %1 milissegundos', args0:[{type:'input_value',name:'MS',check:'Number'}], previousStatement:null, nextStatement:null, colour:COR.controle, inputsInline:true },
+  { type:'mn_tempo', message0:'tempo desde que ligou (ms)', output:'Number', colour:COR.controle },
+
+  // Matriz de LEDs
+  { type:'mn_brilho', message0:'brilho da matriz %1 %%', args0:[{type:'input_value',name:'B',check:'Number'}], previousStatement:null, nextStatement:null, colour:COR.matriz, inputsInline:true, tooltip:'De 0 a 100. Vale para o que for desenhado depois.' },
+  { type:'mn_limpar', message0:'apagar a matriz', previousStatement:null, nextStatement:null, colour:COR.matriz },
+  { type:'mn_todos', message0:'acender todos os LEDs com %1', args0:[{type:'input_value',name:'COR',check:'Cor'}], previousStatement:null, nextStatement:null, colour:COR.matriz, inputsInline:true },
+  { type:'mn_led_xy', message0:'acender LED coluna %1 linha %2 com %3', args0:[{type:'input_value',name:'X',check:'Number'},{type:'input_value',name:'Y',check:'Number'},{type:'input_value',name:'COR',check:'Cor'}], previousStatement:null, nextStatement:null, colour:COR.matriz, inputsInline:true, tooltip:'Coluna e linha de 1 a 5. A linha 1 fica em cima.' },
+  { type:'mn_led_n', message0:'acender LED número %1 com %2', args0:[{type:'input_value',name:'N',check:'Number'},{type:'input_value',name:'COR',check:'Cor'}], previousStatement:null, nextStatement:null, colour:COR.matriz, inputsInline:true, tooltip:'LEDs numerados de 1 a 25.' },
+  { type:'mn_letra', message0:'mostrar letra %1 com %2', args0:[{type:'field_input',name:'L',text:'A'},{type:'input_value',name:'COR',check:'Cor'}], previousStatement:null, nextStatement:null, colour:COR.matriz, inputsInline:true, tooltip:'Uma letra de A a Z.' },
+  { type:'mn_numero', message0:'mostrar número %1 com %2', args0:[{type:'input_value',name:'N',check:'Number'},{type:'input_value',name:'COR',check:'Cor'}], previousStatement:null, nextStatement:null, colour:COR.matriz, inputsInline:true, tooltip:'Um algarismo de 0 a 9.' },
+  { type:'mn_texto', message0:'mostrar texto %1 com %2 cada letra por %3 segundos', args0:[{type:'field_input',name:'T',text:'MANNA'},{type:'input_value',name:'COR',check:'Cor'},{type:'input_value',name:'S',check:'Number'}], previousStatement:null, nextStatement:null, colour:COR.matriz, inputsInline:true, tooltip:'Mostra letras (A–Z) e algarismos (0–9), um de cada vez.' },
+  { type:'mn_simbolo', message0:'mostrar símbolo %1 com %2', args0:[{type:'field_dropdown',name:'S',options:[['?','?'],['!','!'],['#','#'],['@','@'],['$','$'],['%','%'],['(','('],[')',')'],['[','['],[']',']']]},{type:'input_value',name:'COR',check:'Cor'}], previousStatement:null, nextStatement:null, colour:COR.matriz, inputsInline:true },
+  { type:'mn_emocao', message0:'mostrar carinha %1 com %2', args0:[{type:'field_dropdown',name:'E',options:[['feliz =]','=]'],['triste =[','=['],['surpresa =O','=O'],['boca aberta =o','=o'],['confusa =s','=s'],['muito confusa =S','=S']]},{type:'input_value',name:'COR',check:'Cor'}], previousStatement:null, nextStatement:null, colour:COR.matriz, inputsInline:true },
+
+  // Cores
+  { type:'mn_cor', message0:'%1', args0:[{type:'field_dropdown',name:'COR',options:CORES_NOMEADAS}], output:'Cor', colour:COR.cor },
+  { type:'mn_cor_rgb', message0:'cor vermelho %1 verde %2 azul %3', args0:[{type:'input_value',name:'R',check:'Number'},{type:'input_value',name:'G',check:'Number'},{type:'input_value',name:'B',check:'Number'}], output:'Cor', colour:COR.cor, inputsInline:true, tooltip:'Cada parte vai de 0 a 255.' },
+  { type:'mn_cor_arco', message0:'cor do arco-íris na posição %1', args0:[{type:'input_value',name:'P',check:'Number'}], output:'Cor', colour:COR.cor, inputsInline:true, tooltip:'Posição de 0 a 255: percorre todas as cores.' },
+
+  // Sensor de movimento
+  { type:'mn_aceleracao', message0:'aceleração no eixo %1 (g)', args0:[{type:'field_dropdown',name:'EIXO',options:[['X','x'],['Y','y'],['Z','z']]}], output:'Number', colour:COR.sensor, tooltip:'Parada e deitada, a placa marca cerca de 1 g no eixo Z.' },
+  { type:'mn_giro', message0:'giro no eixo %1 (graus/s)', args0:[{type:'field_dropdown',name:'EIXO',options:[['X','x'],['Y','y'],['Z','z']]}], output:'Number', colour:COR.sensor },
+  { type:'mn_angulo', message0:'inclinação %1 em graus', args0:[{type:'field_dropdown',name:'TIPO',options:[['para os lados','rol'],['para frente e para trás','arf']]}], output:'Number', colour:COR.sensor },
+  { type:'mn_inclinada', message0:'placa inclinada %1 ?', args0:[{type:'field_dropdown',name:'DIR',options:[['para frente','1'],['para trás','2'],['para a direita','3'],['para a esquerda','4'],['nivelada (reta)','0']]}], output:'Boolean', colour:COR.sensor },
+  { type:'mn_sacudida', message0:'placa sacudida?', output:'Boolean', colour:COR.sensor },
+  { type:'mn_temperatura', message0:'temperatura (°C)', output:'Number', colour:COR.sensor },
+  { type:'mn_passos', message0:'número de passos', output:'Number', colour:COR.sensor, tooltip:'Conta passos quando a placa vai junto com quem anda.' },
+  { type:'mn_zerar_passos', message0:'zerar contador de passos', previousStatement:null, nextStatement:null, colour:COR.sensor },
+
+  // Monitor serial
+  { type:'mn_escrever', message0:'escrever no monitor %1', args0:[{type:'input_value',name:'V'}], previousStatement:null, nextStatement:null, colour:COR.serial, inputsInline:true },
+  { type:'mn_escrever_dois', message0:'escrever no monitor %1 %2', args0:[{type:'input_value',name:'A'},{type:'input_value',name:'B'}], previousStatement:null, nextStatement:null, colour:COR.serial, inputsInline:true, tooltip:'Escreve duas coisas na mesma linha, por exemplo um nome e um valor.' }
+]);
+
+// Bloco de desenho: grade 5x5 de caixinhas.
+Blockly.Blocks['mn_desenho'] = {
+  init() {
+    this.appendDummyInput().appendField('desenhar com');
+    this.appendValueInput('COR').setCheck('Cor');
+    for (let y = 0; y < 5; y++) {
+      const linha = this.appendDummyInput();
+      for (let x = 0; x < 5; x++) linha.appendField(new Blockly.FieldCheckbox(false), `P${y * 5 + x}`);
+    }
+    this.setInputsInline(false);
+    this.setPreviousStatement(true); this.setNextStatement(true);
+    this.setColour(COR.matriz);
+    this.setTooltip('Marque os LEDs que devem acender.');
+  }
+};
+
+/* ---------------------- Gerador de C++ (Arduino) --------------------- */
+const Cpp = new Blockly.CodeGenerator('Cpp');
+Cpp.ORDER_ATOMIC = 0; Cpp.ORDER_UNARY = 3; Cpp.ORDER_MULT = 5; Cpp.ORDER_ADD = 6;
+Cpp.ORDER_REL = 9; Cpp.ORDER_EQ = 10; Cpp.ORDER_AND = 14; Cpp.ORDER_OR = 15; Cpp.ORDER_NONE = 99;
+Cpp.INDENT = '  ';
+Cpp.addReservedWords('setup,loop,strip,imu,delay,millis,random,int,float,bool,char,void,if,else,for,while,do,return,true,false,Serial,constrain,map,abs,sqrt,atan2,PI,mnLed,mnDesenho,mnTexto,mnAceleracao,mnGiro,mnAngulo,mnInclinacao,mnCorRGB,mnSacudida');
+
+Cpp.init = function (ws) {
+  Object.getPrototypeOf(this).init.call(this, ws);
+  this.usa = new Set();
+  if (!this.nameDB_) this.nameDB_ = new Blockly.Names(this.RESERVED_WORDS_);
+  else this.nameDB_.reset();
+  this.nameDB_.setVariableMap(ws.getVariableMap());
+  this.nameDB_.populateVariables(ws);
+  // Nomes de variável legíveis em C++: "posição" vira "posicao"
+  this.nomesVar = new Map();
+  const usados = new Set(this.RESERVED_WORDS_.split(','));
+  for (const va of ws.getVariableMap().getAllVariables()) {
+    let n = va.name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^A-Za-z0-9_]+/g, '_').replace(/^_+|_+$/g, '');
+    if (!n) n = 'variavel';
+    if (/^[0-9]/.test(n)) n = 'v_' + n;
+    let final = n, k = 2;
+    while (usados.has(final)) final = n + '_' + k++;
+    usados.add(final);
+    this.nomesVar.set(va.getId(), final);
+  }
+};
+Cpp.scrub_ = function (block, code, thisOnly) {
+  const prox = block.nextConnection && block.nextConnection.targetBlock();
+  return code + (prox && !thisOnly ? this.blockToCode(prox) : '');
+};
+Cpp.scrubNakedValue = (line) => line + ';\n';
+Cpp.nomeVar = function (id) { return this.nomesVar.get(id) || this.nameDB_.getName(id, Blockly.Names.NameType.VARIABLE); };
+const v = (b, nome, ordem, padrao = '0') => Cpp.valueToCode(b, nome, ordem ?? Cpp.ORDER_NONE) || padrao;
+const cor = (b) => { Cpp.usa.add('matriz'); return v(b, 'COR', Cpp.ORDER_NONE, '0x00FF00'); };
+const f = Cpp.forBlock;
+
+// Blocos padrão do Blockly
+f['math_number'] = (b) => { const n = Number(b.getFieldValue('NUM')); return [String(n), n < 0 ? Cpp.ORDER_UNARY : Cpp.ORDER_ATOMIC]; };
+f['math_arithmetic'] = (b) => {
+  const op = b.getFieldValue('OP');
+  const t = { ADD:['+', Cpp.ORDER_ADD], MINUS:['-', Cpp.ORDER_ADD], MULTIPLY:['*', Cpp.ORDER_MULT], DIVIDE:['/', Cpp.ORDER_MULT] }[op];
+  const a = v(b, 'A', t ? t[1] : Cpp.ORDER_NONE), c = v(b, 'B', t ? t[1] : Cpp.ORDER_NONE);
+  if (op === 'POWER') return [`pow(${a}, ${c})`, Cpp.ORDER_ATOMIC];
+  if (op === 'DIVIDE') return [`((float)(${a}) / (${c}))`, Cpp.ORDER_ATOMIC];
+  return [`${a} ${t[0]} ${c}`, t[1]];
+};
+f['math_modulo'] = (b) => [`((long)(${v(b,'DIVIDEND')}) % (long)(${v(b,'DIVISOR','',"1")}))`, Cpp.ORDER_ATOMIC];
+f['math_random_int'] = (b) => [`random(${v(b,'FROM')}, (${v(b,'TO')}) + 1)`, Cpp.ORDER_ATOMIC];
+f['math_round'] = (b) => {
+  const fn = { ROUND:'round', ROUNDUP:'ceil', ROUNDDOWN:'floor' }[b.getFieldValue('OP')];
+  return [`${fn}(${v(b,'NUM')})`, Cpp.ORDER_ATOMIC];
+};
+f['math_single'] = (b) => {
+  const op = b.getFieldValue('OP'), x = v(b, 'NUM');
+  const t = { ROOT:`sqrt(${x})`, ABS:`fabs(${x})`, NEG:`-(${x})`, LN:`log(${x})`, LOG10:`log10(${x})`, EXP:`exp(${x})`, POW10:`pow(10, ${x})` };
+  return [t[op] || x, Cpp.ORDER_ATOMIC];
+};
+f['logic_boolean'] = (b) => [b.getFieldValue('BOOL') === 'TRUE' ? 'true' : 'false', Cpp.ORDER_ATOMIC];
+f['logic_negate'] = (b) => [`!(${v(b,'BOOL',Cpp.ORDER_NONE,'false')})`, Cpp.ORDER_UNARY];
+f['logic_operation'] = (b) => {
+  const e = b.getFieldValue('OP') === 'AND', o = e ? Cpp.ORDER_AND : Cpp.ORDER_OR;
+  return [`${v(b,'A',o,'false')} ${e ? '&&' : '||'} ${v(b,'B',o,'false')}`, o];
+};
+f['logic_compare'] = (b) => {
+  const op = { EQ:'==', NEQ:'!=', LT:'<', LTE:'<=', GT:'>', GTE:'>=' }[b.getFieldValue('OP')];
+  const o = (op === '==' || op === '!=') ? Cpp.ORDER_EQ : Cpp.ORDER_REL;
+  return [`${v(b,'A',o)} ${op} ${v(b,'B',o)}`, o];
+};
+f['controls_if'] = (b) => {
+  let code = '';
+  for (let i = 0; b.getInput('IF' + i); i++) {
+    code += (i ? ' else if (' : 'if (') + v(b, 'IF' + i, Cpp.ORDER_NONE, 'false') + ') {\n' + Cpp.statementToCode(b, 'DO' + i) + '}';
+  }
+  if (b.getInput('ELSE')) code += ' else {\n' + Cpp.statementToCode(b, 'ELSE') + '}';
+  return code + '\n';
+};
+f['controls_repeat_ext'] = (b) => {
+  const i = Cpp.nameDB_.getDistinctName('i', Blockly.Names.NameType.VARIABLE);
+  return `for (int ${i} = 0; ${i} < (int)(${v(b,'TIMES')}); ${i}++) {\n${Cpp.statementToCode(b,'DO')}}\n`;
+};
+f['controls_whileUntil'] = (b) => {
+  let c = v(b, 'BOOL', Cpp.ORDER_NONE, 'false');
+  if (b.getFieldValue('MODE') === 'UNTIL') c = `!(${c})`;
+  return `while (${c}) {\n${Cpp.statementToCode(b,'DO')}  delay(1);\n}\n`;
+};
+f['controls_for'] = (b) => {
+  const n = Cpp.nomeVar(b.getFieldValue('VAR'));
+  const de = v(b,'FROM'), ate = v(b,'TO'), passo = v(b,'BY',Cpp.ORDER_NONE,'1');
+  return `for (${n} = ${de}; (${passo}) > 0 ? ${n} <= ${ate} : ${n} >= ${ate}; ${n} += ${passo}) {\n${Cpp.statementToCode(b,'DO')}}\n`;
+};
+f['controls_flow_statements'] = (b) => {
+  const lacos = ['controls_repeat_ext', 'controls_whileUntil', 'controls_for'];
+  let pai = b.getSurroundParent();
+  while (pai && !lacos.includes(pai.type)) pai = pai.getSurroundParent();
+  if (!pai) return '// (bloco "sair do laço" fora de um laço foi ignorado)\n';
+  return b.getFieldValue('FLOW') === 'BREAK' ? 'break;\n' : 'continue;\n';
+};
+f['variables_get'] = (b) => [Cpp.nomeVar(b.getFieldValue('VAR')), Cpp.ORDER_ATOMIC];
+f['variables_set'] = (b) => `${Cpp.nomeVar(b.getFieldValue('VAR'))} = ${v(b,'VALUE')};\n`;
+f['math_change'] = (b) => `${Cpp.nomeVar(b.getFieldValue('VAR'))} += ${v(b,'DELTA')};\n`;
+f['text'] = (b) => [JSON.stringify(b.getFieldValue('TEXT')), Cpp.ORDER_ATOMIC];
+
+// Eventos e controle
+f['mn_ao_ligar'] = () => ''; f['mn_sempre'] = () => '';
+f['mn_esperar'] = (b) => `delay((unsigned long)((${v(b,'S')}) * 1000));\n`;
+f['mn_esperar_ms'] = (b) => `delay((unsigned long)(${v(b,'MS')}));\n`;
+f['mn_tempo'] = () => ['millis()', Cpp.ORDER_ATOMIC];
+
+// Matriz
+f['mn_brilho'] = (b) => { Cpp.usa.add('matriz'); return `strip.setBrightness(map(constrain((int)(${v(b,'B')}), 0, 100), 0, 100, 0, 255));\n`; };
+f['mn_limpar'] = () => { Cpp.usa.add('matriz'); return 'strip.clear();\n'; };
+f['mn_todos'] = (b) => `strip.setAllLedsColor(${cor(b)});\n`;
+f['mn_led_xy'] = (b) => { const c = cor(b); Cpp.usa.add('led'); return `mnLed(((int)(${v(b,'Y')}) - 1) * 5 + ((int)(${v(b,'X')}) - 1), ${c});\n`; };
+f['mn_led_n'] = (b) => { const c = cor(b); Cpp.usa.add('led'); return `mnLed((int)(${v(b,'N')}) - 1, ${c});\n`; };
+f['mn_letra'] = (b) => {
+  const c = cor(b);
+  let l = (b.getFieldValue('L') || 'A').trim().toUpperCase().charAt(0);
+  if (!/[A-Z]/.test(l)) l = 'A';
+  return `strip.writeWord('${l}', ${c});\n`;
+};
+f['mn_numero'] = (b) => { const c = cor(b); return `strip.writeNumber(constrain((int)(${v(b,'N')}), 0, 9), ${c});\n`; };
+f['mn_texto'] = (b) => { const c = cor(b); Cpp.usa.add('texto'); return `mnTexto(${JSON.stringify(b.getFieldValue('T') || '')}, ${c}, ${v(b,'S',Cpp.ORDER_NONE,'0.5')});\n`; };
+f['mn_simbolo'] = (b) => { const c = cor(b); const s = b.getFieldValue('S'); return `strip.writeSymbol('${s === "'" ? "\\'" : s}', ${c});\n`; };
+f['mn_emocao'] = (b) => { const c = cor(b); return `strip.writeEmotion('${b.getFieldValue('E')}', ${c});\n`; };
+f['mn_desenho'] = (b) => {
+  const c = cor(b); Cpp.usa.add('desenho');
+  let bits = '';
+  for (let i = 0; i < 25; i++) bits += b.getFieldValue('P' + i) === 'TRUE' ? '1' : '0';
+  return `mnDesenho("${bits}", ${c});\n`;
+};
+
+// Cores
+f['mn_cor'] = (b) => [b.getFieldValue('COR'), Cpp.ORDER_ATOMIC];
+f['mn_cor_rgb'] = (b) => { Cpp.usa.add('rgb'); return [`mnCorRGB(${v(b,'R')}, ${v(b,'G')}, ${v(b,'B')})`, Cpp.ORDER_ATOMIC]; };
+f['mn_cor_arco'] = (b) => { Cpp.usa.add('matriz'); return [`strip.Wheel((byte)((int)(${v(b,'P')}) & 0xFF))`, Cpp.ORDER_ATOMIC]; };
+
+// Sensor
+const sensor = (extra) => { Cpp.usa.add('sensor'); if (extra) Cpp.usa.add(extra); };
+f['mn_aceleracao'] = (b) => { sensor('acel'); return [`mnAceleracao('${b.getFieldValue('EIXO')}')`, Cpp.ORDER_ATOMIC]; };
+f['mn_giro'] = (b) => { sensor('giro'); return [`mnGiro('${b.getFieldValue('EIXO')}')`, Cpp.ORDER_ATOMIC]; };
+f['mn_angulo'] = (b) => { sensor('angulo'); return [`mnAngulo(${b.getFieldValue('TIPO') === 'rol' ? 'true' : 'false'})`, Cpp.ORDER_ATOMIC]; };
+f['mn_inclinada'] = (b) => { sensor('inclinacao'); return [`(mnInclinacao() == ${b.getFieldValue('DIR')})`, Cpp.ORDER_ATOMIC]; };
+f['mn_sacudida'] = () => { sensor('sacudida'); return ['mnSacudida()', Cpp.ORDER_ATOMIC]; };
+f['mn_temperatura'] = () => { sensor(); return ['imu.readTemperature()', Cpp.ORDER_ATOMIC]; };
+f['mn_passos'] = () => { sensor('passos'); return ['(int)imu.readPedometer()', Cpp.ORDER_ATOMIC]; };
+f['mn_zerar_passos'] = () => { sensor('passos'); return 'imu.resetPedometer();\n'; };
+
+// Monitor serial
+f['mn_escrever'] = (b) => { Cpp.usa.add('serial'); return `Serial.println(${v(b,'V',Cpp.ORDER_NONE,'""')});\n`; };
+f['mn_escrever_dois'] = (b) => { Cpp.usa.add('serial'); return `Serial.print(${v(b,'A',Cpp.ORDER_NONE,'""')});\nSerial.print(" ");\nSerial.println(${v(b,'B',Cpp.ORDER_NONE,'""')});\n`; };
+
+/* Monta o programa completo (.ino) a partir da área de blocos. */
+function gerarPrograma(ws) {
+  Cpp.init(ws);
+  let setup = '', loop = '';
+  const soltos = [];
+  for (const topo of ws.getTopBlocks(true)) {
+    if (!topo.isEnabled()) continue;
+    if (topo.type === 'mn_ao_ligar') setup += Cpp.statementToCode(topo, 'CORPO');
+    else if (topo.type === 'mn_sempre') loop += Cpp.statementToCode(topo, 'CORPO');
+    else soltos.push(topo);
+  }
+  const u = Cpp.usa;
+  if (u.has('led') || u.has('desenho') || u.has('texto')) u.add('matriz');
+  if (u.has('inclinacao')) u.add('angulo');
+  if (u.has('angulo')) u.add('acel');
+
+  const L = [];
+  L.push('// Programa gerado pelo mannaNAUTA Blocos');
+  L.push('// Placa: mannaNAUTA (ESP32-S3)');
+  L.push('');
+  if (u.has('sensor')) { L.push('#include <Wire.h>'); L.push('#include <MannaNAUTA_LSM6DS.h>'); }
+  if (u.has('matriz')) L.push('#include <mannaNAUTA_WS2812.h>');
+  if (u.has('angulo')) L.push('#include <math.h>');
+  L.push('');
+  if (u.has('matriz')) L.push('mannaNAUTA_WS2812 strip = mannaNAUTA_WS2812(LEDS_COUNT, LEDS_PIN, CHANNEL, TYPE_GRB);');
+  if (u.has('sensor')) L.push('MannaNAUTA_LSM6DS imu;');
+
+  const vars = ws.getVariableMap().getAllVariables();
+  if (vars.length) { L.push(''); for (const va of vars) L.push(`float ${Cpp.nomeVar(va.getId())} = 0;`); }
+
+  const aux = [];
+  if (u.has('rgb')) aux.push(
+`uint32_t mnCorRGB(int r, int g, int b) {
+  r = constrain(r, 0, 255); g = constrain(g, 0, 255); b = constrain(b, 0, 255);
+  return ((uint32_t)r << 16) | ((uint32_t)g << 8) | (uint32_t)b;
+}`);
+  if (u.has('led')) aux.push(
+`void mnLed(int indice, uint32_t cor) {
+  if (indice >= 0 && indice < LEDS_COUNT) strip.setLedColor(indice, cor);
+}`);
+  if (u.has('desenho')) aux.push(
+`void mnDesenho(const char *pontos, uint32_t cor) {
+  strip.setAllLedsColorData((uint32_t)0);
+  for (int i = 0; i < 25 && pontos[i]; i++) {
+    if (pontos[i] == '1') strip.setLedColorData(i, cor);
+  }
+  strip.show();
+}`);
+  if (u.has('texto')) aux.push(
+`void mnTexto(const char *texto, uint32_t cor, float segundos) {
+  for (int i = 0; texto[i]; i++) {
+    char c = texto[i];
+    if (c >= 'a' && c <= 'z') c = c - 'a' + 'A';
+    if (c >= 'A' && c <= 'Z') strip.writeWord(c, cor);
+    else if (c >= '0' && c <= '9') strip.writeNumber(c - '0', cor);
+    else strip.clear();
+    delay((unsigned long)(segundos * 1000));
+  }
+  strip.clear();
+}`);
+  if (u.has('acel')) aux.push(
+`float mnAceleracao(char eixo) {
+  float x = 0, y = 0, z = 0;
+  imu.readAcceleration(x, y, z);
+  return eixo == 'x' ? x : (eixo == 'y' ? y : z);
+}`);
+  if (u.has('giro')) aux.push(
+`float mnGiro(char eixo) {
+  float x = 0, y = 0, z = 0;
+  imu.readGyroscope(x, y, z);
+  return eixo == 'x' ? x : (eixo == 'y' ? y : z);
+}`);
+  if (u.has('angulo')) aux.push(
+`// lados = true: inclinação para os lados; false: para frente e para trás
+float mnAngulo(bool lados) {
+  float ax = 0, ay = 0, az = 0;
+  imu.readAcceleration(ax, ay, az);
+  if (lados) return atan2(ay, az) * 180.0 / PI;
+  return atan2(-ax, sqrt(ay * ay + az * az)) * 180.0 / PI;
+}`);
+  if (u.has('inclinacao')) aux.push(
+`// 0 nivelada, 1 frente, 2 trás, 3 direita, 4 esquerda
+int mnInclinacao() {
+  const float LIMITE = 12.0;
+  float rol = mnAngulo(true), arf = mnAngulo(false);
+  if (fabs(rol) < LIMITE && fabs(arf) < LIMITE) return 0;
+  if (fabs(arf) >= fabs(rol)) return arf < 0 ? 1 : 2;
+  return rol > 0 ? 3 : 4;
+}`);
+  if (u.has('sacudida')) aux.push(
+`bool mnSacudida() {
+  return imu.shake();
+}`);
+  if (aux.length) { L.push(''); L.push(aux.join('\n\n')); }
+
+  const ini = [];
+  if (u.has('serial')) ini.push('Serial.begin(115200);');
+  if (u.has('matriz')) { ini.push('strip.begin();'); ini.push('strip.setBrightness(20);'); }
+  if (u.has('sensor')) {
+    ini.push('if (!imu.begin()) {');
+    ini.push('  imu.begin(SDA_PIN, SCL_PIN, 0x6B, &Wire);');
+    ini.push('}');
+  }
+  if (u.has('passos')) { ini.push('imu.resetPedometer();'); ini.push('imu.enablePedometer(true);'); }
+  if (u.has('sacudida')) ini.push('imu.enableWakeup(true, 0, 20);');
+
+  L.push('');
+  L.push('void setup() {');
+  for (const l of ini) L.push('  ' + l);
+  if (setup) L.push(setup.replace(/\s+$/, ''));
+  L.push('}');
+  L.push('');
+  L.push('void loop() {');
+  if (loop) L.push(loop.replace(/\s+$/, ''));
+  L.push('}');
+  if (soltos.length) {
+    L.push('');
+    L.push(`// Atenção: ${soltos.length} bloco(s) fora de "quando a placa ligar" ou "repetir para sempre" não entraram no programa.`);
+  }
+  return L.join('\n') + '\n';
+}
+
+/* ---------------------------- Caixa de blocos ------------------------ */
+const toolbox = {
+  kind: 'categoryToolbox',
+  contents: [
+    { kind:'category', name:'Eventos', colour:COR.evento, contents:[ {kind:'block',type:'mn_ao_ligar'}, {kind:'block',type:'mn_sempre'} ] },
+    { kind:'category', name:'Controle', colour:COR.controle, contents:[
+      {kind:'block',type:'mn_esperar',inputs:{S:sombraNum(1)}},
+      {kind:'block',type:'mn_esperar_ms',inputs:{MS:sombraNum(100)}},
+      {kind:'block',type:'controls_repeat_ext',inputs:{TIMES:sombraNum(10)}},
+      {kind:'block',type:'controls_if'},
+      {kind:'block',type:'controls_if',extraState:{hasElse:true}},
+      {kind:'block',type:'controls_whileUntil'},
+      {kind:'block',type:'controls_for',inputs:{FROM:sombraNum(1),TO:sombraNum(10),BY:sombraNum(1)}},
+      {kind:'block',type:'controls_flow_statements'},
+      {kind:'block',type:'mn_tempo'}
+    ]},
+    { kind:'category', name:'Matriz de LEDs', colour:COR.matriz, contents:[
+      {kind:'block',type:'mn_emocao',inputs:{COR:sombraCor}},
+      {kind:'block',type:'mn_letra',inputs:{COR:sombraCor}},
+      {kind:'block',type:'mn_numero',inputs:{N:sombraNum(5),COR:sombraCor}},
+      {kind:'block',type:'mn_texto',inputs:{COR:sombraCor,S:sombraNum(0.6)}},
+      {kind:'block',type:'mn_simbolo',inputs:{COR:sombraCor}},
+      {kind:'block',type:'mn_desenho',inputs:{COR:sombraCor}},
+      {kind:'block',type:'mn_led_xy',inputs:{X:sombraNum(3),Y:sombraNum(3),COR:sombraCor}},
+      {kind:'block',type:'mn_led_n',inputs:{N:sombraNum(1),COR:sombraCor}},
+      {kind:'block',type:'mn_todos',inputs:{COR:sombraCor}},
+      {kind:'block',type:'mn_limpar'},
+      {kind:'block',type:'mn_brilho',inputs:{B:sombraNum(20)}}
+    ]},
+    { kind:'category', name:'Cores', colour:COR.cor, contents:[
+      {kind:'block',type:'mn_cor'},
+      {kind:'block',type:'mn_cor_rgb',inputs:{R:sombraNum(255),G:sombraNum(100),B:sombraNum(0)}},
+      {kind:'block',type:'mn_cor_arco',inputs:{P:sombraNum(0)}}
+    ]},
+    { kind:'category', name:'Sensor de movimento', colour:COR.sensor, contents:[
+      {kind:'block',type:'mn_inclinada'},
+      {kind:'block',type:'mn_angulo'},
+      {kind:'block',type:'mn_sacudida'},
+      {kind:'block',type:'mn_aceleracao'},
+      {kind:'block',type:'mn_giro'},
+      {kind:'block',type:'mn_temperatura'},
+      {kind:'block',type:'mn_passos'},
+      {kind:'block',type:'mn_zerar_passos'}
+    ]},
+    { kind:'category', name:'Monitor serial', colour:COR.serial, contents:[
+      {kind:'block',type:'mn_escrever',inputs:{V:{shadow:{type:'text',fields:{TEXT:'Olá!'}}}}},
+      {kind:'block',type:'mn_escrever_dois',inputs:{A:{shadow:{type:'text',fields:{TEXT:'valor:'}}},B:sombraNum(0)}},
+      {kind:'block',type:'text'}
+    ]},
+    { kind:'category', name:'Operadores', colour:COR.matematica, contents:[
+      {kind:'block',type:'math_number'},
+      {kind:'block',type:'math_arithmetic',inputs:{A:sombraNum(1),B:sombraNum(1)}},
+      {kind:'block',type:'math_random_int',inputs:{FROM:sombraNum(1),TO:sombraNum(10)}},
+      {kind:'block',type:'math_modulo',inputs:{DIVIDEND:sombraNum(10),DIVISOR:sombraNum(3)}},
+      {kind:'block',type:'math_round',inputs:{NUM:sombraNum(3.7)}},
+      {kind:'block',type:'math_single',inputs:{NUM:sombraNum(9)}},
+      {kind:'block',type:'logic_compare',inputs:{A:sombraNum(0),B:sombraNum(0)}},
+      {kind:'block',type:'logic_operation'},
+      {kind:'block',type:'logic_negate'},
+      {kind:'block',type:'logic_boolean'}
+    ]},
+    { kind:'category', name:'Variáveis', colour:COR.variavel, custom:'VARIABLE' }
+  ]
+};
+
+const PROJETO_INICIAL = {
+  blocks: { languageVersion: 0, blocks: [
+    { type:'mn_ao_ligar', x:30, y:30, inputs:{ CORPO:{ block:{ type:'mn_brilho', inputs:{B:sombraNum(20)}, next:{ block:{ type:'mn_texto', fields:{T:'OI'}, inputs:{COR:{shadow:{type:'mn_cor',fields:{COR:'0x0000FF'}}}, S:sombraNum(0.6)} } } } } } },
+    { type:'mn_sempre', x:30, y:200, inputs:{ CORPO:{ block:{
+      type:'controls_if', extraState:{hasElse:true},
+      inputs:{
+        IF0:{ block:{ type:'mn_inclinada', fields:{DIR:'0'} } },
+        DO0:{ block:{ type:'mn_emocao', fields:{E:'=]'}, inputs:{COR:sombraCor} } },
+        ELSE:{ block:{ type:'mn_emocao', fields:{E:'=O'}, inputs:{COR:{shadow:{type:'mn_cor',fields:{COR:'0xFF8000'}}}} } }
+      },
+      next:{ block:{ type:'mn_esperar', inputs:{S:sombraNum(0.2)} } }
+    } } } }
+  ]}
+};
+
+/* ---------------------------- Interface ------------------------------ */
+const $ = (id) => document.getElementById(id);
+const statusEl = $('status');
+const status = (t) => { statusEl.textContent = t; };
+const progresso = (p) => { $('progresso').firstElementChild.style.width = (p == null ? 0 : Math.round(p * 100)) + '%'; };
+
+const ws = Blockly.inject('areaBlocos', {
+  toolbox, trashcan: true, renderer: 'zelos', media: 'https://unpkg.com/blockly@11.2.2/media/', theme: Blockly.Themes.Zelos || undefined,
+  zoom: { controls: true, wheel: true, startScale: 0.8 }, move: { scrollbars: true, drag: true, wheel: false },
+  grid: { spacing: 24, length: 2, colour: '#e3e9f2', snap: true }
+});
+
+function carregar(json) {
+  ws.clear();
+  try { Blockly.serialization.workspaces.load(json, ws); }
+  catch (e) { Blockly.serialization.workspaces.load(PROJETO_INICIAL, ws); }
+}
+let salvo = null;
+try { salvo = JSON.parse(armazenar.ler('mannaBlocos.projeto', 'null')); } catch (e) {}
+carregar(salvo || PROJETO_INICIAL);
+
+let codigoAtual = '';
+function atualizar() {
+  try { codigoAtual = gerarPrograma(ws); } catch (e) { codigoAtual = '// Erro ao gerar o código: ' + e.message; }
+  $('codigo').textContent = codigoAtual;
+  armazenar.gravar('mannaBlocos.projeto', JSON.stringify(Blockly.serialization.workspaces.save(ws)));
+}
+ws.addChangeListener((e) => { if (!e.isUiEvent) atualizar(); });
+atualizar();
+
+// Abas
+document.querySelectorAll('.abas button').forEach((bt) => bt.addEventListener('click', () => {
+  document.querySelectorAll('.abas button').forEach((x) => x.classList.toggle('ativa', x === bt));
+  document.querySelectorAll('.painel').forEach((p) => p.classList.toggle('ativo', p.id === 'painel-' + bt.dataset.aba));
+  Blockly.svgResize(ws);
+}));
+window.addEventListener('resize', () => Blockly.svgResize(ws));
+
+// Novo / Abrir / Salvar
+$('btNovo').onclick = () => carregar(PROJETO_INICIAL);
+$('btSalvar').onclick = () => {
+  const dados = JSON.stringify(Blockly.serialization.workspaces.save(ws), null, 1);
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([dados], { type: 'application/json' }));
+  a.download = 'projeto-mannanauta.json';
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+};
+$('arquivo').onchange = async (e) => {
+  const arq = e.target.files[0]; if (!arq) return;
+  try { carregar(JSON.parse(await arq.text())); status('Projeto aberto'); }
+  catch (err) { status('Não consegui abrir esse arquivo'); }
+  e.target.value = '';
+};
+$('btCopiar').onclick = async () => {
+  try { await navigator.clipboard.writeText(codigoAtual); status('Código copiado'); }
+  catch (e) { status('Não foi possível copiar'); }
+};
+
+// Configuração do servidor
+const urlServidor = () => (armazenar.ler('mannaBlocos.servidor', SERVIDOR_PADRAO) || '').replace(/\/+$/, '');
+$('btConfig').onclick = () => { $('urlServidor').value = urlServidor(); $('dlgConfig').showModal(); };
+$('btCancelarCfg').onclick = () => $('dlgConfig').close();
+$('btSalvarCfg').onclick = () => { armazenar.gravar('mannaBlocos.servidor', $('urlServidor').value.trim()); $('dlgConfig').close(); status('Servidor salvo'); };
+
+// Aviso quando o navegador não tem Web Serial (ou a página está dentro de um quadro)
+const temSerial = 'serial' in navigator;
+const emQuadro = (() => { try { return window.self !== window.top; } catch (e) { return true; } })();
+if (!temSerial || emQuadro) {
+  $('aviso').style.display = 'block';
+  $('aviso').textContent = !temSerial
+    ? 'Para enviar programas à placa, abra esta página no Google Chrome ou no Microsoft Edge de um computador.'
+    : 'Esta é uma prévia: aqui dá para montar os blocos e ver o código. Para enviar à placa, abra a plataforma no endereço próprio dela, no Chrome ou no Edge.';
+}
+
+/* ---------------------- Compilar e enviar ---------------------------- */
+let esptool = null;
+async function carregarEsptool() {
+  if (!esptool) esptool = await import('https://unpkg.com/esptool-js@0.7.1/bundle.js');
+  return esptool;
+}
+const base64ParaBytes = (b64) => Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
+
+let portaMonitor = null, leitorMonitor = null;
+async function fecharMonitor() {
+  try { if (leitorMonitor) { await leitorMonitor.cancel(); leitorMonitor.releaseLock(); } } catch (e) {}
+  try { if (portaMonitor) await portaMonitor.close(); } catch (e) {}
+  leitorMonitor = null; portaMonitor = null;
+  $('btMonitor').textContent = 'Conectar monitor';
+}
+
+$('btEnviar').onclick = async () => {
+  const bt = $('btEnviar');
+  if (!temSerial || emQuadro) { status('Envio indisponível aqui (veja o aviso)'); return; }
+  const servidor = urlServidor();
+  if (!servidor) { $('btConfig').click(); status('Informe o servidor de compilação'); return; }
+  bt.disabled = true; progresso(0.05);
+  let transporte = null;
+  try {
+    await fecharMonitor();
+    // 1. Pede a porta antes de compilar (o Chrome exige que seja logo após o clique)
+    const porta = await navigator.serial.requestPort();
+    // 2. Compila no servidor
+    status('Compilando… (pode levar até 1 minuto)');
+    const resp = await fetch(servidor + '/compilar', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ codigo: codigoAtual })
+    });
+    const res = await resp.json().catch(() => ({ ok: false, erro: 'Resposta inválida do servidor' }));
+    if (!res.ok) { status('Erro ao compilar'); mostrarErro(res.erro || 'Erro desconhecido'); return; }
+    progresso(0.3);
+    // 3. Grava na placa
+    status('Conectando à placa…');
+    const { ESPLoader, Transport } = await carregarEsptool();
+    transporte = new Transport(porta, false);
+    const terminal = { clean() {}, writeLine(t) { console.log(t); }, write(t) {} };
+    const carregador = new ESPLoader({ transport: transporte, baudrate: 921600, terminal, romBaudrate: 115200 });
+    await carregador.main();
+    status('Gravando…');
+    const partes = res.partes.map((p) => {
+      const bytes = base64ParaBytes(p.dados);
+      return { address: p.endereco, data: bytes };
+    });
+    await carregador.writeFlash({
+      fileArray: partes, flashSize: 'keep', flashMode: 'keep', flashFreq: 'keep', eraseAll: false, compress: true,
+      reportProgress: (i, escrito, total) => progresso(0.3 + 0.7 * ((i + escrito / total) / partes.length))
+    });
+    try { await carregador.after('hard_reset'); } catch (e) { try { await carregador.hardReset(); } catch (e2) {} }
+    status('Programa enviado! ✔');
+    progresso(1); setTimeout(() => progresso(0), 1500);
+  } catch (e) {
+    if (e && e.name === 'NotFoundError') status('Nenhuma porta escolhida');
+    else { status('Falha no envio'); mostrarErro((e && e.message) || String(e)); }
+  } finally {
+    try { if (transporte) await transporte.disconnect(); } catch (e) {}
+    bt.disabled = false;
+  }
+};
+
+function mostrarErro(texto) {
+  document.querySelector('.abas button[data-aba="monitor"]').click();
+  $('monitor').textContent += '\n⚠ ' + texto + '\n';
+}
+
+/* ---------------------------- Monitor serial ------------------------- */
+$('btMonitor').onclick = async () => {
+  if (portaMonitor) { await fecharMonitor(); return; }
+  if (!temSerial || emQuadro) { status('Monitor indisponível aqui (veja o aviso)'); return; }
+  try {
+    portaMonitor = await navigator.serial.requestPort();
+    await portaMonitor.open({ baudRate: 115200 });
+    $('btMonitor').textContent = 'Desconectar monitor';
+    document.querySelector('.abas button[data-aba="monitor"]').click();
+    const dec = new TextDecoder();
+    leitorMonitor = portaMonitor.readable.getReader();
+    while (true) {
+      const { value, done } = await leitorMonitor.read();
+      if (done) break;
+      const m = $('monitor');
+      m.textContent = (m.textContent + dec.decode(value)).slice(-20000);
+      m.parentElement.scrollTop = m.parentElement.scrollHeight;
+    }
+  } catch (e) {
+    if (!(e && e.name === 'NotFoundError')) status('Monitor desconectado');
+  } finally { await fecharMonitor(); }
+};
+$('btLimparMonitor').onclick = () => { $('monitor').textContent = ''; };
+</script>
+</body>
+</html>
