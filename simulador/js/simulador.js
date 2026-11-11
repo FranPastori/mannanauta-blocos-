@@ -202,8 +202,8 @@ function criarS(id) {
   };
   const botoes = {
     toque: (lado) => !!est.toque[lado],
-    // valor bruto simulado: em repouso ~25000, tocado ~80000 (com uma pequena variação)
-    leitura: (lado) => (est.toque[lado] ? 80000 : 25000) + Math.floor(Math.random() * 600),
+    // valor bruto simulado, como na placa real: ~18000 sem tocar, ~31000 tocando
+    leitura: (lado) => (est.toque[lado] ? 31000 : (lado === 'esquerdo' ? 19000 : 18400)) + Math.floor(Math.random() * 60),
     boot: () => !!est.boot
   };
 
@@ -268,7 +268,8 @@ function criarS(id) {
     },
     millis: () => Math.round(performance.now() - t0),
     str: (v) => formatarPy(v),
-    print: (...vals) => { if (ativo()) noMonitor(vals.map(formatarPy).join(' ') + '\n'); },
+    // com a placa de verdade conectada, o monitor mostra só o que vem da placa
+    print: (...vals) => { if (ativo() && !conexao.porta) noMonitor(vals.map(formatarPy).join(' ') + '\n'); },
     resto: (a, b) => { a = Number(a); b = Number(b) || 1; return ((a % b) + b) % b; },
     aleatorio: (a, b) => { a = Math.trunc(a); b = Math.trunc(b); if (a > b) [a, b] = [b, a]; return a + Math.floor(Math.random() * (b - a + 1)); },
     mapear: (x, a, b, c, d) => (b == a ? Math.trunc(c) : Math.trunc((x - a) * (d - c) / (b - a) + Number(c))),
