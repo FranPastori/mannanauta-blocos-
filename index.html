@@ -171,6 +171,24 @@ Blockly.Blocks['mn_desenho'] = {
   }
 };
 
+// Os blocos padrão do Blockly ganham a cor da categoria em que aparecem.
+const RECOLORIR = {
+  controle: ['controls_if', 'controls_repeat_ext', 'controls_whileUntil', 'controls_for', 'controls_flow_statements'],
+  matematica: ['math_number', 'math_arithmetic', 'math_random_int', 'math_modulo', 'math_round', 'math_single',
+               'logic_compare', 'logic_operation', 'logic_negate', 'logic_boolean'],
+  serial: ['text'],
+  variavel: ['variables_get', 'variables_set', 'math_change']
+};
+for (const [categoria, tipos] of Object.entries(RECOLORIR)) {
+  for (const tipo of tipos) {
+    const def = Blockly.Blocks[tipo];
+    if (!def || def.__recolorido) continue;
+    const initOriginal = def.init;
+    def.init = function () { initOriginal.call(this); this.setColour(COR[categoria]); };
+    def.__recolorido = true;
+  }
+}
+
 /* ---------------------- Gerador de C++ (Arduino) --------------------- */
 const Cpp = new Blockly.CodeGenerator('Cpp');
 Cpp.ORDER_ATOMIC = 0; Cpp.ORDER_UNARY = 3; Cpp.ORDER_MULT = 5; Cpp.ORDER_ADD = 6;
