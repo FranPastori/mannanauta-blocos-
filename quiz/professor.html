@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Resultados do Quiz mannaIoT</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  /* Painel da professora: resumo no topo, tabela de tentativas abaixo */
+  :root {
+    --preto:#0b0f14; --azul:#1589C6; --azul-escuro:#076CA9; --ciano:#1CD3F7;
+    --verde:#44AF69; --rosa:#EF466E; --laranja:#FFA300; --fundo:#F2F7FC; --borda:#DCE7F2; --texto:#111418; --suave:#5b6672;
+    --fonte:'Nunito', system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; color-scheme: light;
+  }
+  * { box-sizing:border-box; }
+  html, body { margin:0; }
+  body { font-family:var(--fonte); background:var(--fundo); color:var(--texto); }
+  .topo { background:var(--preto); color:#fff; padding:14px 20px; }
+  .topo .linha { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; max-width:1100px; margin:0 auto; }
+  .marca { font-weight:900; font-size:22px; } .marca span { color:var(--ciano); }
+  main { max-width:1100px; margin:0 auto; padding:20px 16px 40px; display:grid; gap:16px; }
+  .cartao { background:#fff; border:1px solid var(--borda); border-radius:18px; padding:18px 20px; }
+  h1 { margin:0 0 4px; font-size:26px; font-weight:900; text-wrap:balance; }
+  .sub { margin:0; color:var(--suave); font-weight:700; }
+  button, .bt { font:inherit; font-weight:900; font-size:15px; border:0; border-radius:12px; padding:10px 16px; background:var(--azul); color:#fff; cursor:pointer; text-decoration:none; display:inline-block; }
+  .bt.sec { background:#fff; color:var(--texto); border:2px solid var(--borda); }
+  button:focus-visible, input:focus-visible, select:focus-visible { outline:3px solid var(--laranja); outline-offset:2px; }
+  .resumo { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:12px; }
+  .resumo div { background:#fff; border:1px solid var(--borda); border-radius:16px; padding:14px 16px; }
+  .resumo small { display:block; color:var(--suave); font-weight:800; }
+  .resumo b { font-size:28px; font-weight:900; font-variant-numeric:tabular-nums; }
+  .filtros { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+  .filtros input[type=search] { font:inherit; font-weight:700; padding:9px 12px; border:2px solid var(--borda); border-radius:12px; min-width:220px; }
+  .filtros label { font-weight:800; display:flex; gap:6px; align-items:center; }
+  .tabela { overflow-x:auto; }
+  table { width:100%; border-collapse:collapse; font-size:14px; }
+  th, td { text-align:left; padding:10px 8px; border-bottom:1px solid var(--borda); white-space:nowrap; }
+  th { font-weight:900; color:var(--suave); font-size:13px; }
+  td.n { font-variant-numeric:tabular-nums; }
+  .pct { display:inline-block; min-width:52px; text-align:center; font-weight:900; padding:3px 8px; border-radius:999px; color:#fff; }
+  .alto { background:var(--verde); } .medio { background:var(--laranja); } .baixo { background:var(--rosa); }
+  details summary { cursor:pointer; font-weight:800; color:var(--azul-escuro); }
+  details ul { margin:6px 0 0; padding-left:18px; white-space:normal; max-width:520px; }
+  .aviso { background:#FFF6E0; border:1px solid #FFE1A3; border-radius:12px; padding:10px 12px; font-weight:700; color:#6b4500; }
+</style>
+</head>
+<body>
+<div class="topo"><div class="linha"><div class="marca">manna<span>IoT</span></div><div id="conta"></div></div></div>
+<main>
+  <section class="cartao">
+    <h1>Resultados do quiz · Módulo 01</h1>
+    <p class="sub">Quem respondeu, quantas acertou e quando. Só a professora consegue ver esta página.</p>
+    <div id="areaLogin" style="margin-top:14px">
+      <button id="btEntrar">Entrar com Google</button>
+      <p class="aviso" id="aviso" hidden></p>
+    </div>
+  </section>
+  <section id="painel" hidden style="display:grid; gap:16px">
+    <div class="resumo">
+      <div><small>Estudantes</small><b id="rEstudantes">0</b></div>
+      <div><small>Tentativas</small><b id="rTentativas">0</b></div>
+      <div><small>Média de acertos</small><b id="rMedia">0%</b></div>
+      <div><small>Notas 100%</small><b id="rPerfeitas">0</b></div>
+    </div>
+    <div class="cartao">
+      <div class="filtros">
+        <input type="search" id="busca" placeholder="Buscar por nome ou e-mail" aria-label="Buscar por nome ou e-mail">
+        <label for="soMelhor"><input type="checkbox" id="soMelhor" checked> Só a melhor tentativa de cada estudante</label>
+        <button class="bt sec" id="btAtualizar">Atualizar</button>
+        <button class="bt" id="btCsv">Baixar planilha (CSV)</button>
+      </div>
+      <div class="tabela" style="margin-top:12px">
+        <table>
+          <thead><tr><th>Estudante</th><th>E-mail</th><th>Acertos</th><th>%</th><th>Pontos</th><th>Quando</th><th>Respostas</th></tr></thead>
+          <tbody id="linhas"></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+</main>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="firebase-config.js"></script>
+<script>
+const QUIZ_ID = 'mannaiot-modulo-01';
+const $ = (id) => document.getElementById(id);
+let todos = [];
+const avisar = (t) => { $('aviso').textContent = t; $('aviso').hidden = !t; };
+const configurado = typeof FIREBASE_CONFIG === 'object' && FIREBASE_CONFIG && FIREBASE_CONFIG.apiKey && !/COLE_AQUI/.test(FIREBASE_CONFIG.apiKey);
+
+if (!configurado) avisar('Falta configurar o Firebase (arquivo firebase-config.js).');
+else {
+  firebase.initializeApp(FIREBASE_CONFIG);
+  firebase.auth().onAuthStateChanged((u) => {
+    $('conta').innerHTML = '';
+    if (u) {
+      const s = document.createElement('button'); s.className = 'bt sec'; s.textContent = 'Sair (' + (u.email || '') + ')';
+      s.onclick = () => firebase.auth().signOut(); $('conta').append(s);
+      $('areaLogin').hidden = true; carregar();
+    } else { $('areaLogin').hidden = false; $('painel').hidden = true; }
+  });
+}
+$('btEntrar').onclick = async () => {
+  if (!configurado) return;
+  const p = new firebase.auth.GoogleAuthProvider(); p.setCustomParameters({ prompt: 'select_account' });
+  try { await firebase.auth().signInWithPopup(p); } catch (e) { if (e.code !== 'auth/popup-closed-by-user') avisar('Não foi possível entrar: ' + e.message); }
+};
+
+async function carregar() {
+  try {
+    const snap = await firebase.firestore().collection('resultados').where('quiz', '==', QUIZ_ID).get();
+    todos = snap.docs.map((d) => ({ id: d.id, ...d.data(), data: d.data().quando ? d.data().quando.toDate() : null }));
+    todos.sort((a, b) => (b.data || 0) - (a.data || 0));
+    $('painel').hidden = false; avisar(''); mostrar();
+  } catch (e) {
+    $('painel').hidden = true; $('areaLogin').hidden = false;
+    avisar(e.code === 'permission-denied' ? 'Esta conta não tem permissão para ver os resultados. Entre com a conta da professora.' : 'Erro ao carregar: ' + e.message);
+  }
+}
+
+function filtrados() {
+  const busca = $('busca').value.trim().toLowerCase();
+  let lista = todos.filter((r) => !busca || (r.nome || '').toLowerCase().includes(busca) || (r.email || '').toLowerCase().includes(busca));
+  if ($('soMelhor').checked) {
+    const melhor = new Map();
+    for (const r of lista) {
+      const m = melhor.get(r.uid);
+      if (!m || r.porcentagem > m.porcentagem || (r.porcentagem === m.porcentagem && r.pontos > m.pontos)) melhor.set(r.uid, r);
+    }
+    lista = [...melhor.values()].sort((a, b) => (a.nome || '').localeCompare(b.nome || '', 'pt-BR'));
+  }
+  return lista;
+}
+
+function mostrar() {
+  const lista = filtrados();
+  const estudantes = new Set(todos.map((r) => r.uid)).size;
+  $('rEstudantes').textContent = estudantes;
+  $('rTentativas').textContent = todos.length;
+  $('rMedia').textContent = (lista.length ? Math.round(lista.reduce((s, r) => s + (r.porcentagem || 0), 0) / lista.length) : 0) + '%';
+  $('rPerfeitas').textContent = lista.filter((r) => r.porcentagem === 100).length;
+  const tb = $('linhas'); tb.innerHTML = '';
+  for (const r of lista) {
+    const tr = document.createElement('tr');
+    const cls = r.porcentagem >= 70 ? 'alto' : r.porcentagem >= 40 ? 'medio' : 'baixo';
+    const td = (t, c) => { const e = document.createElement('td'); if (c) e.className = c; e.textContent = t; tr.append(e); return e; };
+    td(r.nome || '—'); td(r.email || '—'); td(`${r.acertos} de ${r.total}`, 'n');
+    const p = td('', 'n'); const s = document.createElement('span'); s.className = 'pct ' + cls; s.textContent = r.porcentagem + '%'; p.append(s);
+    td(r.pontos ?? 0, 'n'); td(r.data ? r.data.toLocaleString('pt-BR') : '—', 'n');
+    const det = document.createElement('details'); const sm = document.createElement('summary'); sm.textContent = 'ver'; det.append(sm);
+    const ul = document.createElement('ul');
+    for (const a of r.respostas || []) { const li = document.createElement('li'); li.textContent = (a.certa ? '✓ ' : '✗ ') + a.pergunta + ' → ' + a.escolhida; ul.append(li); }
+    det.append(ul); const tdd = document.createElement('td'); tdd.append(det); tr.append(tdd);
+    tb.append(tr);
+  }
+  if (!lista.length) { const tr = document.createElement('tr'); const t = document.createElement('td'); t.colSpan = 7; t.textContent = 'Ainda não há respostas.'; tr.append(t); tb.append(tr); }
+}
+
+$('busca').oninput = mostrar; $('soMelhor').onchange = mostrar; $('btAtualizar').onclick = carregar;
+$('btCsv').onclick = () => {
+  const linhas = [['Nome', 'E-mail', 'Acertos', 'Total', 'Porcentagem', 'Pontos', 'Data']];
+  for (const r of filtrados()) linhas.push([r.nome, r.email, r.acertos, r.total, r.porcentagem, r.pontos, r.data ? r.data.toLocaleString('pt-BR') : '']);
+  const csv = '﻿' + linhas.map((l) => l.map((c) => '"' + String(c ?? '').replace(/"/g, '""') + '"').join(';')).join('\n');
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' })); a.download = 'resultados-quiz-mannaiot.csv'; a.click();
+};
+</script>
+</body>
+</html>
