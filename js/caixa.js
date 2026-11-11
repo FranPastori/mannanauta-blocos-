@@ -61,6 +61,12 @@ const toolbox = {
       {kind:'block',type:'mn_blynk_enviar',inputs:{V:{block:{type:'mn_analogico'}}}},
       {kind:'block',type:'mn_wifi_ok'}
     ]},
+    { kind:'category', name:'Página web', colour:COR.pagina, contents:[
+      {kind:'block',type:'mn_wifi_criar'},
+      {kind:'block',type:'mn_pagina_iniciar'},
+      {kind:'block',type:'mn_pagina_mostrar',inputs:{V:{block:{type:'mn_analogico'}}}},
+      {kind:'block',type:'mn_escrever',inputs:{V:{block:{type:'mn_endereco'}}}}
+    ]},
     { kind:'category', name:'Monitor serial', colour:COR.serial, contents:[
       {kind:'block',type:'mn_escrever',inputs:{V:{shadow:{type:'text',fields:{TEXT:'Olá!'}}}}},
       {kind:'block',type:'mn_escrever_dois',inputs:{A:{shadow:{type:'text',fields:{TEXT:'valor:'}}},B:sombraNum(0)}},

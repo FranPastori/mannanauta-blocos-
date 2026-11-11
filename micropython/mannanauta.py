@@ -2,10 +2,10 @@
 # Versão em MicroPython das bibliotecas livres de wuigor (licença MIT):
 #   mannaNAUTA_WS2812_Lib  -> classe Matriz (matriz 5x5 de LEDs WS2812, pino 47)
 #   mannaNAUTA_LSM6DS_Lib  -> classe Sensor (acelerômetro/giroscópio LSM6DS, SDA 5 / SCL 4)
-# Também traz: leitura analógica, Wi-Fi e envio de dados para o Blynk.
+# Também traz: leitura analógica, Wi-Fi, envio de dados para o Blynk e uma página web própria da placa.
 # Os desenhos de letras, números, símbolos e carinhas são os mesmos da biblioteca original.
 
-VERSAO = "2"
+VERSAO = "3"
 
 import math
 import time
@@ -424,3 +424,144 @@ def blynk_enviar(pino, valor):
     except Exception as e:
         print("Erro ao enviar para o Blynk:", e)
         return False
+
+
+# ------------------------------------------------- Rede Wi-Fi da placa
+_ap = None
+
+
+def wifi_criar(nome, senha=""):
+    """A placa cria a própria rede Wi-Fi (sem internet). Senha: 8 caracteres ou mais, ou vazia (rede aberta)."""
+    global _ap
+    import network
+    _ap = network.WLAN(network.AP_IF)
+    _ap.active(True)
+    nome, senha = str(nome), str(senha)
+    if len(senha) >= 8:
+        try:
+            _ap.config(essid=nome, password=senha, security=3)
+        except Exception:
+            _ap.config(essid=nome, password=senha, authmode=3)
+    else:
+        if senha:
+            print("A senha da rede precisa ter 8 caracteres ou mais. A rede foi criada sem senha.")
+        try:
+            _ap.config(essid=nome, security=0)
+        except Exception:
+            _ap.config(essid=nome, authmode=0)
+    time.sleep_ms(300)
+    print("Rede Wi-Fi da placa criada:", nome)
+    return True
+
+
+def endereco_pagina():
+    if _ap is not None and _ap.active():
+        return "http://" + _ap.ifconfig()[0]
+    if wifi_conectado():
+        return "http://" + _wlan.ifconfig()[0]
+    return "(sem rede)"
+
+
+# ------------------------------------------------- Página web da placa
+_titulo = "mannaNAUTA"
+_nomes = []
+_valores = {}
+_servidor_ligado = False
+
+_HTML = """<!DOCTYPE html><html lang="pt-BR"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1"><title>mannaNAUTA</title>
+<style>
+body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:#F5F9FD;color:#111418}
+header{background:#fff;padding:16px 18px 10px;border-bottom:1px solid #DCE7F2}
+h1{margin:0;font-size:22px;font-weight:900}
+.marca{font-weight:900;font-size:13px;color:#076CA9;letter-spacing:.3px}
+.pontos{height:10px;margin:8px 0 0;background:radial-gradient(circle at 5px 5px,#1589C6 4px,transparent 4.6px) 0 0/16px 10px repeat-x}
+main{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;padding:16px}
+.card{background:#fff;border-radius:16px;padding:16px;box-shadow:0 1px 3px rgba(0,0,0,.08);border-top:6px solid #1CD3F7}
+.card:nth-child(4n+2){border-color:#FFA300}.card:nth-child(4n+3){border-color:#EF466E}.card:nth-child(4n+4){border-color:#44AF69}
+.nome{font-size:14px;font-weight:700;color:#5b6672}
+.valor{font-size:34px;font-weight:900;margin-top:6px;word-break:break-word}
+footer{padding:0 16px 16px;font-size:12px;color:#5b6672}
+</style></head><body>
+<header><div class="marca">manna team · mannaNAUTA</div><h1 id="t">...</h1><div class="pontos"></div></header>
+<main id="m"></main><footer id="f">Atualizando...</footer>
+<script>
+async function at(){try{const r=await fetch('/dados',{cache:'no-store'});const d=await r.json();
+document.getElementById('t').textContent=d.titulo;document.title=d.titulo;
+const m=document.getElementById('m');m.innerHTML='';
+for(const [n,v] of d.itens){const c=document.createElement('div');c.className='card';
+const a=document.createElement('div');a.className='nome';a.textContent=n;
+const b=document.createElement('div');b.className='valor';b.textContent=v;c.append(a,b);m.append(c);}
+document.getElementById('f').textContent='Atualizado às '+new Date().toLocaleTimeString();}
+catch(e){document.getElementById('f').textContent='Sem conexão com a placa...';}}
+at();setInterval(at,2000);
+</script></body></html>"""
+
+
+def _texto(v):
+    if isinstance(v, bool):
+        return "sim" if v else "não"
+    if isinstance(v, float):
+        v = round(v, 2)
+        if v == int(v):
+            v = int(v)
+    return str(v)
+
+
+def pagina_mostrar(nome, valor):
+    nome = str(nome)
+    if nome not in _valores:
+        _nomes.append(nome)
+    _valores[nome] = _texto(valor)
+
+
+def _dados():
+    import json
+    return json.dumps({"titulo": _titulo, "itens": [[n, _valores.get(n, "")] for n in _nomes]})
+
+
+def _servidor():
+    import socket
+    srv = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    srv.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    srv.bind(("0.0.0.0", 80))
+    srv.listen(3)
+    while True:
+        cli = None
+        try:
+            cli, _ = srv.accept()
+            cli.settimeout(3)
+            pedido = cli.recv(1024)
+            linha = pedido.split(b"\r\n", 1)[0].decode()
+            caminho = linha.split(" ")[1] if " " in linha else "/"
+            if caminho.startswith("/dados"):
+                corpo, tipo = _dados(), "application/json"
+            elif caminho == "/" or caminho.startswith("/?"):
+                corpo, tipo = _HTML, "text/html; charset=utf-8"
+            else:
+                cli.send(b"HTTP/1.0 404 Not Found\r\nContent-Length: 0\r\n\r\n")
+                continue
+            dados = corpo.encode()
+            cli.send(("HTTP/1.0 200 OK\r\nContent-Type: %s\r\nContent-Length: %d\r\nCache-Control: no-store\r\nConnection: close\r\n\r\n" % (tipo, len(dados))).encode())
+            for i in range(0, len(dados), 1024):
+                cli.send(dados[i:i + 1024])
+        except Exception:
+            pass
+        finally:
+            if cli:
+                try:
+                    cli.close()
+                except Exception:
+                    pass
+
+
+def pagina_iniciar(titulo="mannaNAUTA"):
+    """Liga a página web da placa. Ela funciona em segundo plano, junto com o programa."""
+    global _titulo, _servidor_ligado
+    _titulo = str(titulo)
+    if _servidor_ligado:
+        return
+    import _thread
+    _thread.start_new_thread(_servidor, ())
+    _servidor_ligado = True
+    print("Página web ligada! Abra no celular:", endereco_pagina())

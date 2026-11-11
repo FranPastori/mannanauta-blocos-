@@ -167,6 +167,12 @@ f['mn_wifi_ok'] = () => ['wifi_conectado()', Py.ORDER_ATOMIC];
 f['mn_blynk'] = (b) => `blynk_conectar(${JSON.stringify((b.getFieldValue('TOKEN') || '').trim())})\n`;
 f['mn_blynk_enviar'] = (b) => `blynk_enviar("${b.getFieldValue('PINO')}", ${v(b,'V')})\n`;
 
+// Página web da placa
+f['mn_wifi_criar'] = (b) => `wifi_criar(${JSON.stringify(b.getFieldValue('NOME'))}, ${JSON.stringify(b.getFieldValue('SENHA'))})\n`;
+f['mn_pagina_iniciar'] = (b) => `pagina_iniciar(${JSON.stringify(b.getFieldValue('TITULO'))})\n`;
+f['mn_pagina_mostrar'] = (b) => `pagina_mostrar(${JSON.stringify(b.getFieldValue('NOME'))}, ${v(b,'V')})\n`;
+f['mn_endereco'] = () => ['endereco_pagina()', Py.ORDER_ATOMIC];
+
 // Monitor serial
 f['mn_escrever'] = (b) => `print(${v(b,'V',Py.ORDER_NONE,'""')})\n`;
 f['mn_escrever_dois'] = (b) => `print(${v(b,'A',Py.ORDER_NONE,'""')}, ${v(b,'B',Py.ORDER_NONE,'""')})\n`;

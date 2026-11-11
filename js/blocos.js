@@ -13,7 +13,7 @@ const armazenar = {
 };
 
 /* ---------------------------- Cores ---------------------------------- */
-const COR = { evento:'#FFBF00', controle:'#FFAB19', matriz:'#9966FF', cor:'#CF63CF', sensor:'#4CBF56', serial:'#0FBD8C', matematica:'#59C059', logica:'#5CB1D6', variavel:'#FF8C1A', pinos:'#5C68A6', internet:'#1CA8DD' };
+const COR = { evento:'#FFBF00', controle:'#FFAB19', matriz:'#9966FF', cor:'#CF63CF', sensor:'#4CBF56', serial:'#0FBD8C', matematica:'#59C059', logica:'#5CB1D6', variavel:'#FF8C1A', pinos:'#5C68A6', internet:'#1CA8DD', pagina:'#E0567A' };
 
 const CORES_NOMEADAS = [
   ['🔴 vermelho', '0xFF0000'], ['🟢 verde', '0x00FF00'], ['🔵 azul', '0x0000FF'],
@@ -80,6 +80,12 @@ Blockly.defineBlocksWithJsonArray([
   { type:'mn_wifi_ok', message0:'Wi-Fi conectado?', output:'Boolean', colour:COR.internet },
   { type:'mn_blynk', message0:'conectar ao Blynk com o código %1', args0:[{type:'field_input',name:'TOKEN',text:'código da placa'}], previousStatement:null, nextStatement:null, colour:COR.internet, tooltip:'Cole o código (Auth Token) desta placa, criado no Blynk.' },
   { type:'mn_blynk_enviar', message0:'enviar %1 para o Blynk no pino %2', args0:[{type:'input_value',name:'V'},{type:'field_dropdown',name:'PINO',options:[['V0','V0'],['V1','V1'],['V2','V2'],['V3','V3'],['V4','V4'],['V5','V5'],['V6','V6'],['V7','V7'],['V8','V8'],['V9','V9']]}], previousStatement:null, nextStatement:null, colour:COR.internet, inputsInline:true, tooltip:'Envia um valor para o painel do Blynk. Espere alguns segundos entre um envio e outro.' },
+
+  // Página web da placa
+  { type:'mn_wifi_criar', message0:'criar rede Wi-Fi da placa nome %1 senha %2', args0:[{type:'field_input',name:'NOME',text:'mannaNAUTA'},{type:'field_input',name:'SENHA',text:'12345678'}], previousStatement:null, nextStatement:null, colour:COR.pagina, tooltip:'A placa cria a própria rede (sem internet). A senha precisa ter 8 caracteres ou mais; deixe vazia para rede aberta.' },
+  { type:'mn_pagina_iniciar', message0:'ligar página web com título %1', args0:[{type:'field_input',name:'TITULO',text:'Minha horta'}], previousStatement:null, nextStatement:null, colour:COR.pagina, tooltip:'Liga a página da placa. No celular, conecte na rede da placa e abra o endereço mostrado no monitor (normalmente http://192.168.4.1).' },
+  { type:'mn_pagina_mostrar', message0:'mostrar na página %1 valor %2', args0:[{type:'field_input',name:'NOME',text:'Umidade'},{type:'input_value',name:'V'}], previousStatement:null, nextStatement:null, colour:COR.pagina, inputsInline:true, tooltip:'Cria ou atualiza um quadrinho na página com esse nome e valor.' },
+  { type:'mn_endereco', message0:'endereço da página', output:'String', colour:COR.pagina },
 
   // Monitor serial
   { type:'mn_escrever', message0:'escrever no monitor %1', args0:[{type:'input_value',name:'V'}], previousStatement:null, nextStatement:null, colour:COR.serial, inputsInline:true },
