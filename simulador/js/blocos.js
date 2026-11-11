@@ -106,8 +106,8 @@ Blockly.defineBlocksWithJsonArray([
   { type:'mn_dht', message0:'%1 do DHT11 no pino %2', args0:[{type:'field_dropdown',name:'TIPO',options:[['temperatura do ar (°C)','temperatura_ar'],['umidade do ar (%)','umidade_ar']]},pinoCampo()], output:'Number', colour:COR.componentes, tooltip:'Sensor DHT11. Ele mede no máximo uma vez a cada 2 segundos.' },
 
   // Botões da placa
-  { type:'mn_toque', message0:'botão de toque %1 tocado?', args0:[{type:'field_dropdown',name:'LADO',options:[['esquerdo','esquerdo'],['direito','direito']]}], output:'Boolean', colour:COR.botoes, tooltip:'Os botões de toque ficam nas mãos do astronauta (esquerdo = GPIO7, direito = GPIO6).' },
-  { type:'mn_toque_valor', message0:'leitura do toque %1', args0:[{type:'field_dropdown',name:'LADO',options:[['esquerdo','esquerdo'],['direito','direito']]}], output:'Number', colour:COR.botoes, tooltip:'Valor do sensor de toque, como o touchRead do Arduino (esquerdo = GPIO7, direito = GPIO6). No ESP32-S3 o valor sobe quando você toca.' },
+  { type:'mn_toque', message0:'botão de toque %1 tocado?', args0:[{type:'field_dropdown',name:'LADO',options:[['da mão esquerda','esquerdo'],['da mão direita','direito']]}], output:'Boolean', colour:COR.botoes, tooltip:'Os botões de toque ficam nas mãos do astronauta (esquerdo = GPIO7, direito = GPIO6).' },
+  { type:'mn_toque_valor', message0:'leitura do toque %1', args0:[{type:'field_dropdown',name:'LADO',options:[['da mão esquerda','esquerdo'],['da mão direita','direito']]}], output:'Number', colour:COR.botoes, tooltip:'Valor do sensor de toque, como o touchRead do Arduino (esquerdo = GPIO7, direito = GPIO6). No ESP32-S3 o valor sobe quando você toca.' },
   { type:'mn_boot', message0:'botão BOOT pressionado?', output:'Boolean', colour:COR.botoes, tooltip:'Botão BOOT/Usuário da placa (GPIO0).' },
 
   // Internet (IoT)
