@@ -5,7 +5,7 @@
 # Também traz: leitura analógica, Wi-Fi, envio de dados para o Blynk e uma página web própria da placa.
 # Os desenhos de letras, números, símbolos e carinhas são os mesmos da biblioteca original.
 
-VERSAO = "8"
+VERSAO = "9"
 
 import math
 import time
@@ -651,13 +651,13 @@ def endereco_pagina():
 
 
 # ------------------------------------------------- Página web da placa
-# O estado da página fica guardado fora do módulo, para continuar valendo quando
-# o programa é enviado de novo sem reiniciar a placa (o servidor continua o mesmo).
-import builtins
-_pg = getattr(builtins, "_mn_pagina", None)
-if _pg is None:
+# O estado da página fica guardado em sys.modules, fora deste módulo, para continuar
+# valendo quando o programa é enviado de novo sem reiniciar a placa (o servidor continua o mesmo).
+import sys
+_pg = sys.modules.get("_mn_pagina")
+if not isinstance(_pg, dict):
     _pg = {"titulo": "mannaNAUTA", "nomes": [], "valores": {}, "ligado": False}
-    builtins._mn_pagina = _pg
+    sys.modules["_mn_pagina"] = _pg
 else:
     _pg["nomes"].clear()
     _pg["valores"].clear()
@@ -711,7 +711,7 @@ def pagina_mostrar(nome, valor):
 
 def _dados():
     import json
-    pg = builtins._mn_pagina
+    pg = sys.modules.get("_mn_pagina") or _pg
     return json.dumps({"titulo": pg["titulo"], "itens": [[n, pg["valores"].get(n, "")] for n in pg["nomes"]]})
 
 
@@ -719,7 +719,11 @@ def _servidor():
     import socket
     srv = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     srv.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    srv.bind(("0.0.0.0", 80))
+    try:
+        srv.bind(("0.0.0.0", 80))
+    except OSError:
+        print("A página web já estava ligada por outro programa. Aperte o botão RESET da placa.")
+        return
     srv.listen(3)
     while True:
         cli = None

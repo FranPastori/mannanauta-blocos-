@@ -211,15 +211,26 @@ $('btEnviar').onclick = async () => {
     const versao = (lib.match(/^VERSAO = "([^"]+)"/m) || [])[1] || '?';
     const [saida] = await executar(
       `try:\n import os\n f=open('mannanauta.py')\n l=f.readline()\n while l and not l.startswith('VERSAO'):\n  l=f.readline()\n f.close()\n print(l.strip())\nexcept Exception:\n print('nada')`);
+    let reiniciar = false;
     if (!saida.includes(`VERSAO = "${versao}"`)) {
       status('Preparando a placa…');
       await gravarArquivo('mannanauta.py', lib);
+      reiniciar = true; // biblioteca nova: reinicia a placa para começar do zero
     }
     status('Enviando o programa…');
     await gravarArquivo('main.py', codigoAtual);
     progresso(1);
-    // Roda o programa novo (sem reiniciar a placa)
     conexao.silencio = false;
+    if (reiniciar) {
+      // A placa desconecta ao reiniciar; o app reconecta sozinho quando ela voltar.
+      noMonitor('\n--- programa enviado, reiniciando a placa ---\n');
+      await escrever('import machine\nmachine.reset()\n');
+      await escrever('\x04');
+      status('Programa enviado! ✔ A placa está reiniciando…');
+      setTimeout(() => progresso(0), 1500);
+      return;
+    }
+    // Roda o programa novo (sem reiniciar a placa)
     noMonitor('\n--- programa enviado ---\n');
     await rodarPrograma();
     status('Programa enviado! ✔');
