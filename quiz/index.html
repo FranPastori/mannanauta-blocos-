@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Quiz mannaIoT Módulo 1</title>
+<title>É IoT ou não é?</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
@@ -64,7 +64,8 @@
   .op { position:relative; border:0; border-radius:16px; padding:18px 16px 18px 56px; min-height:84px; text-align:left; color:#fff; font-weight:800; font-size:17px; line-height:1.3; box-shadow:0 5px 0 rgba(0,0,0,.18); transition:transform .08s, opacity .2s; }
   .op:hover:not(:disabled) { transform:translateY(-2px); }
   .op .letra { position:absolute; left:14px; top:50%; translate:0 -50%; width:30px; height:30px; border-radius:9px; background:#ffffff33; display:grid; place-items:center; font-weight:900; }
-  .op:nth-child(1) { background:#1589C6; } .op:nth-child(2) { background:#EF466E; }
+  .op:nth-child(1) { background:#3A9A5C; } .op:nth-child(2) { background:#EF466E; }
+  .op { text-align:center; padding:22px 16px; min-height:96px; font-size:22px; }
   .op:nth-child(3) { background:#E08F00; } .op:nth-child(4) { background:#3A9A5C; }
   .op:disabled { cursor:default; }
   .op.apagada { opacity:.28; }
@@ -121,10 +122,10 @@
   <!-- Início -->
   <section id="telaInicio" class="tela ativa" aria-labelledby="tituloQuiz">
     <div class="cartao">
-      <h1 id="tituloQuiz">Quiz: Introdução à Internet das Coisas</h1>
-      <p class="sub">16 perguntas sobre o Módulo 01 do e-book mannaIoT. Responda rápido: quanto antes acertar, mais pontos você ganha. Depois de cada resposta aparece uma explicação.</p>
-      <ul class="temas" aria-label="Assuntos do quiz">
-        <li>Internet das Coisas</li><li>Sensores e dados</li><li>Eletrônica básica</li><li>Lei de Ohm</li><li>Componentes</li><li>mannaNAUTA</li>
+      <h1 id="tituloQuiz">É IoT ou não é?</h1>
+      <p class="sub">Vão aparecer 16 objetos e situações. Para cada um, decida: é Internet das Coisas ou não? Lembre: IoT junta <b>sensor</b>, <b>processamento</b>, <b>comunicação pela rede</b> e <b>dados</b> para apoiar uma ação. Quanto mais rápido acertar, mais pontos você ganha.</p>
+      <ul class="temas" aria-label="Lugares das situações">
+        <li>Em casa</li><li>Na escola</li><li>No campo</li><li>Na cidade</li><li>mannaNAUTA</li>
       </ul>
       <div id="blocoLogin">
         <p class="sub" style="margin-top:0">Para começar, entre com a sua conta Google. Assim o professor sabe quem respondeu.</p>
@@ -190,64 +191,42 @@
 <script src="firebase-config.js"></script>
 <script>
 const PERGUNTAS = [
-  { tema:'Internet das Coisas', q:'Segundo o material, o que é a Internet das Coisas (IoT)?',
-    ops:['A integração entre objetos físicos, sensores, processamento, comunicação e dados para observar situações e apoiar ou automatizar ações',
-         'Uma rede social para objetos inteligentes',
-         'Um tipo de computador portátil sem fio',
-         'Um aplicativo para controlar a internet de casa'],
-    exp:'IoT integra objetos físicos, sensores, processamento, comunicação e dados para observar situações e apoiar ou automatizar ações.' },
-  { tema:'Internet das Coisas', q:'Segundo a IoT Analytics, quantos dispositivos conectados à internet deve haver em 2030?',
-    ops:['55,8 bilhões','26,5 bilhões','8 bilhões','100 milhões'],
-    exp:'A estimativa é de 55,8 bilhões de dispositivos conectados em 2030, e 80% deles serão dispositivos IoT.' },
-  { tema:'Internet das Coisas', q:'Qual é a ordem correta do caminho dos dados numa solução IoT?',
-    ops:['Ambiente → sensor → microcontrolador → rede → plataforma → decisão',
-         'Plataforma → rede → sensor → ambiente → decisão',
-         'Microcontrolador → ambiente → plataforma → sensor → rede',
-         'Decisão → sensor → ambiente → rede → plataforma'],
-    exp:'Tudo começa no ambiente: o sensor coleta, o microcontrolador processa, a rede transmite, a plataforma mostra e a pessoa decide ou age.' },
-  { tema:'Projeto GreenLife', q:'No Projeto GreenLife, qual é o papel do mannaNAUTA?',
-    ops:['Processar a leitura do sensor e enviar os dados pelo Wi-Fi','Medir a umidade do solo diretamente','Regar a planta sozinho, sem sensores','Guardar a água da rega'],
-    exp:'O sensor mede a umidade do solo; o mannaNAUTA (microcontrolador) processa a informação e envia os dados pelo Wi-Fi para uma plataforma IoT.' },
-  { tema:'Sensores e dados', q:'Qual sensor o material indica para medir a umidade relativa do ar?',
-    ops:['DHT11','LDR','PIR HC-SR501','Botão'],
-    exp:'O DHT11 (ou DHT22) mede temperatura e umidade relativa do ar. O LDR mede luz e o PIR detecta presença.' },
-  { tema:'Sensores e dados', q:'Um botão que só pode estar "pressionado" ou "solto" produz que tipo de sinal?',
-    ops:['Digital','Analógico','Contínuo','Sonoro'],
-    exp:'Sinais digitais representam estados discretos, como pressionado ou não pressionado.' },
-  { tema:'Sensores e dados', q:'Qual parte do microcontrolador transforma a tensão de um sensor analógico em um número?',
-    ops:['O conversor analógico-digital (ADC)','A matriz de LEDs','O botão BOOT','A porta USB'],
-    exp:'O conversor analógico-digital transforma a tensão de entrada em um número que o programa consegue usar.' },
-  { tema:'Sensores e dados', q:'Por que o valor lido por um sensor não é automaticamente verdadeiro?',
-    ops:['Porque pode sofrer influência da instalação, da alimentação, do ambiente e da calibração','Porque sensores só funcionam à noite','Porque todo sensor erra de propósito','Porque os dados só valem se forem impressos'],
-    exp:'"Medir não é o mesmo que compreender": dados precisam de contexto, comparação, interpretação e calibração.' },
-  { tema:'Eletrônica básica', q:'Em que unidade é medida a corrente elétrica?',
-    ops:['Ampère (A)','Volt (V)','Ohm (Ω)','Watt (W)'],
-    exp:'Corrente: ampère (A). Tensão: volt (V). Resistência: ohm (Ω).' },
-  { tema:'Lei de Ohm', q:'Pela Lei de Ohm (V = R × I), qual é a tensão num resistor de 100 Ω com corrente de 0,05 A?',
-    ops:['5 V','2 V','50 V','0,5 V'],
-    exp:'V = R × I = 100 × 0,05 = 5 V.' },
-  { tema:'Circuitos', q:'Dois resistores de 2 Ω e 3 Ω estão em série. Qual é a resistência total?',
-    ops:['5 Ω','1,2 Ω','6 Ω','1 Ω'],
-    exp:'Em série, as resistências se somam: 2 + 3 = 5 Ω.' },
-  { tema:'Circuitos', q:'Os mesmos resistores de 2 Ω e 3 Ω, agora em paralelo. Qual é a resistência total?',
-    ops:['1,2 Ω','5 Ω','6 Ω','0,8 Ω'],
-    exp:'Em paralelo: RT = (R1 × R2) ÷ (R1 + R2) = 6 ÷ 5 = 1,2 Ω. A resistência total fica menor que a menor delas.' },
-  { tema:'Circuitos', q:'Num circuito em série, o que acontece se um componente for desconectado?',
-    ops:['Todo o circuito é interrompido','Só aquele componente apaga','A corrente dobra nos outros','Nada muda'],
-    exp:'No circuito em série a corrente tem um único caminho: se um componente falha, o circuito todo para.' },
-  { tema:'Componentes', q:'Qual é a vantagem do sensor de umidade do solo capacitivo em relação ao resistivo?',
-    ops:['Sofre menos corrosão e é mais estável, pois o metal não fica em contato direto com o solo','É mais barato porque não tem circuito','Mede também a temperatura do ar','Funciona sem energia'],
-    exp:'No capacitivo não há contato direto do metal com o solo: menos corrosão, mais durabilidade e mais estabilidade, inclusive em solos salinos.' },
-  { tema:'Componentes', q:'Para que serve um relé?',
-    ops:['É um interruptor controlado eletricamente: um circuito de baixa potência comanda uma carga de alta potência','É um sensor de temperatura','Serve para medir a corrente elétrica','É uma lâmpada de alta potência'],
-    exp:'O relé funciona como interruptor eletromecânico e isola os dois circuitos. Tem bobina, âncora móvel, contatos (NA/NF) e mola de retorno.' },
-  { tema:'mannaNAUTA', q:'Qual destes recursos NÃO vem integrado na placa mannaNAUTA?',
-    ops:['Sensor de umidade do solo','Matriz de LEDs WS2812','Acelerômetro e giroscópio de três eixos','Dois botões sensíveis ao toque'],
-    exp:'A placa traz matriz de LEDs, acelerômetro/giroscópio, 2 botões de toque, botões Reset e Boot. O sensor de umidade do solo é ligado por fora.' }
+  { tema:'Em casa', q:'💡 Uma lâmpada comum, ligada pelo interruptor da parede.', iot:false,
+    exp:'Não coleta dados nem se comunica por uma rede. É só um circuito elétrico ligado e desligado à mão.' },
+  { tema:'Em casa', q:'💡 Uma lâmpada inteligente que você liga e desliga pelo celular, pelo Wi-Fi.', iot:true,
+    exp:'Ela se conecta a uma rede, recebe comandos e informa o seu estado: é um objeto físico participando de ações pela internet.' },
+  { tema:'No campo', q:'🌱 Um sensor de umidade do solo ligado ao mannaNAUTA, que envia as leituras pelo Wi-Fi para uma plataforma (como no Projeto GreenLife).', iot:true,
+    exp:'Tem tudo: sensor, processamento (mannaNAUTA), comunicação pela rede, dados na plataforma e uma decisão sobre a rega.' },
+  { tema:'Na escola', q:'🧮 Uma calculadora de bolso.', iot:false,
+    exp:'Processa números, mas não tem sensores do ambiente nem se comunica por uma rede.' },
+  { tema:'No corpo', q:'⌚ Um relógio inteligente que mede os batimentos do coração e manda os dados para um aplicativo.', iot:true,
+    exp:'Sensor (batimentos), processamento e comunicação com o aplicativo, onde os dados ajudam a acompanhar a saúde.' },
+  { tema:'Medição', q:'🌡️ Um termômetro de mercúrio.', iot:false,
+    exp:'Mede a temperatura, mas a leitura fica só nele: não há processamento eletrônico nem comunicação.' },
+  { tema:'Na escola', q:'💻 Um notebook navegando na internet.', iot:false,
+    exp:'Está conectado, mas o material separa computadores e notebooks dos dispositivos IoT: ele não é um objeto que observa o ambiente com sensores.' },
+  { tema:'Na escola', q:'🌦️ Uma estação meteorológica da escola que publica a temperatura e a umidade do ar num site.', iot:true,
+    exp:'Sensores (como o DHT11), processamento e envio dos dados pela internet para qualquer pessoa acompanhar.' },
+  { tema:'Animais', q:'🐶 Uma coleira com GPS que mostra no celular onde o cachorro está.', iot:true,
+    exp:'O sensor de localização gera dados que são enviados pela rede e aparecem no aplicativo.' },
+  { tema:'Em casa', q:'🌀 Um ventilador com controle remoto infravermelho.', iot:false,
+    exp:'O controle só manda um comando de perto. Não há rede, nem dados coletados, nem envio para outro lugar.' },
+  { tema:'Segurança', q:'📷 Uma câmera que detecta movimento e manda um alerta para o celular.', iot:true,
+    exp:'Percebe o ambiente (movimento), decide (detectou ou não) e comunica pela internet para apoiar uma ação.' },
+  { tema:'mannaNAUTA', q:'🤖 O mannaNAUTA mostrando uma carinha na matriz de LEDs quando é inclinado, sem usar o Wi-Fi.', iot:false,
+    exp:'Tem sensor e processamento, mas sem comunicação por rede ainda não é IoT. É um sistema embarcado.' },
+  { tema:'mannaNAUTA', q:'🤖 O mannaNAUTA enviando a umidade do solo para o painel do Blynk.', iot:true,
+    exp:'Agora sim: sensor, processamento e comunicação pela internet, com os dados num painel para alguém decidir.' },
+  { tema:'Na cidade', q:'🚦 Um semáforo que troca de cor sempre no mesmo tempo, sem sensores.', iot:false,
+    exp:'Segue só um temporizador: não observa o trânsito nem se comunica com uma central.' },
+  { tema:'Na cidade', q:'🚦 Um semáforo que conta os carros com sensores e envia os dados para a central de trânsito.', iot:true,
+    exp:'Coleta dados do ambiente, comunica pela rede e apoia decisões sobre o tempo de cada sinal.' },
+  { tema:'Em casa', q:'❄️ Uma geladeira comum, sem conexão.', iot:false,
+    exp:'Controla a temperatura sozinha (termostato), mas não envia nem recebe dados por uma rede.' }
 ];
 
 const TEMPO_MAX = 20; // segundos por pergunta
-const QUIZ_ID = 'mannaiot-modulo-01';
+const QUIZ_ID = 'mannaiot-e-iot-ou-nao';
 
 /* ------------------------- Login com Google (Firebase) ------------------------- */
 let usuario = null, banco = null;
@@ -291,7 +270,7 @@ async function salvarResultado(acertos, pct) {
     await banco.collection('resultados').add({
       quiz: QUIZ_ID, uid: usuario.uid, nome: usuario.displayName || '', email: usuario.email || '',
       acertos, total: respostas.length, porcentagem: pct, pontos, semTempo,
-      respostas: respostas.map((r) => ({ pergunta: PERGUNTAS[r.i].q, escolhida: r.escolhida, certa: r.certa })),
+      respostas: respostas.map((r) => ({ pergunta: PERGUNTAS[r.i].q, escolhida: r.escolhida.replace(/^\S+ /, ''), certa: r.certa })),
       quando: firebase.firestore.FieldValue.serverTimestamp()
     });
     el.textContent = '✔ Resultado enviado para a professora.';
@@ -305,7 +284,7 @@ const mostrarTela = (id) => { document.querySelectorAll('.tela').forEach((t) => 
 
 function comecar(indices) {
   semTempo = $('semTempo').checked;
-  ordem = embaralhar(indices).map((i) => ({ i, ops: embaralhar(PERGUNTAS[i].ops.map((t, k) => ({ t, certa: k === 0 }))) }));
+  ordem = embaralhar(indices).map((i) => ({ i, ops: [{ t:'✅ É IoT', certa: PERGUNTAS[i].iot }, { t:'❌ Não é IoT', certa: !PERGUNTAS[i].iot }] }));
   atual = 0; pontos = 0; respostas = [];
   $('pontos').textContent = '0';
   $('tempoBox').hidden = semTempo;
@@ -324,7 +303,7 @@ function mostrarPergunta() {
   item.ops.forEach((o, k) => {
     const b = document.createElement('button');
     b.className = 'op'; b.type = 'button';
-    b.innerHTML = `<span class="letra">${'ABCD'[k]}</span>`;
+    b.innerHTML = '';
     b.append(document.createTextNode(o.t));
     b.onclick = () => responder(k);
     grade.append(b);
@@ -360,7 +339,7 @@ function responder(k) {
     else b.classList.add('apagada');
   });
   const resp = $('retorno');
-  const titulo = certa ? `Acertou! +${ganho} pontos` : (k < 0 ? 'O tempo acabou!' : 'Não foi dessa vez.');
+  const titulo = (certa ? `Acertou! +${ganho} pontos. ` : (k < 0 ? 'O tempo acabou! ' : 'Não foi dessa vez. ')) + (p.iot ? 'É IoT.' : 'Não é IoT.');
   resp.className = 'retorno ' + (certa ? 'ok' : 'erro');
   resp.innerHTML = `<strong></strong><span></span>`;
   resp.querySelector('strong').textContent = titulo;
@@ -391,7 +370,7 @@ function finalizar() {
     const p = PERGUNTAS[r.i];
     const d = document.createElement('div'); d.className = 'item' + (r.certa ? '' : ' x');
     const a = document.createElement('p'); a.className = 'q'; a.textContent = (r.certa ? '✓ ' : '✗ ') + p.q;
-    const b = document.createElement('p'); b.className = 'r'; b.textContent = r.certa ? `Resposta: ${p.ops[0]}` : `Sua resposta: ${r.escolhida} · Correta: ${p.ops[0]}`;
+    const b = document.createElement('p'); b.className = 'r'; const certaTxt = p.iot ? 'É IoT' : 'Não é IoT'; b.textContent = r.certa ? `Resposta: ${certaTxt}` : `Sua resposta: ${r.escolhida.replace(/^\S+ /, '')} · Correta: ${certaTxt}`;
     d.append(a, b); rev.append(d);
   }
   $('btSoErros').hidden = acertos === respostas.length;
@@ -406,7 +385,7 @@ $('btSoErros').onclick = () => usuario && comecar(respostas.filter((r) => !r.cer
 document.addEventListener('keydown', (e) => {
   if (!$('telaPergunta').classList.contains('ativa')) return;
   const k = 'abcd1234'.indexOf(e.key.toLowerCase());
-  if (k >= 0 && $('acoesProx').hidden) responder(k % 4);
+  if (k >= 0 && k % 4 < 2 && $('acoesProx').hidden) responder(k % 4);
 });
 </script>
 </body>

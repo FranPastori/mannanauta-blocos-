@@ -1,4 +1,4 @@
-# Quiz mannaIoT · Módulo 01
+# Quiz "É IoT ou não é?" · mannaIoT Módulo 01
 
 - `index.html`: quiz para os estudantes (entram com a conta Google; o resultado é salvo).
 - `professor.html`: painel da professora com quem respondeu, acertos, data, respostas e planilha CSV.

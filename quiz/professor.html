@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Resultados do Quiz mannaIoT</title>
+<title>Resultados: É IoT ou não é?</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
@@ -50,7 +50,7 @@
 <div class="topo"><div class="linha"><div class="marca">manna<span>IoT</span></div><div id="conta"></div></div></div>
 <main>
   <section class="cartao">
-    <h1>Resultados do quiz · Módulo 01</h1>
+    <h1>Resultados · É IoT ou não é?</h1>
     <p class="sub">Quem respondeu, quantas acertou e quando. Só a professora consegue ver esta página.</p>
     <div id="areaLogin" style="margin-top:14px">
       <button id="btEntrar">Entrar com Google</button>
@@ -85,7 +85,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script src="firebase-config.js"></script>
 <script>
-const QUIZ_ID = 'mannaiot-modulo-01';
+const QUIZ_ID = 'mannaiot-e-iot-ou-nao';
 const $ = (id) => document.getElementById(id);
 let todos = [];
 const avisar = (t) => { $('aviso').textContent = t; $('aviso').hidden = !t; };
