@@ -1,0 +1,57 @@
+/* Identidade visual manna team */
+:root {
+  --preto:#000000; --ciano:#1CD3F7; --laranja:#FFA300; --rosa:#EF466E; --verde:#44AF69;
+  --azul:#1589C6; --azul-escuro:#076CA9; --azul-claro:#CCE2F7;
+  --fundo:#F5F9FD; --borda:#DCE7F2; --texto:#111418;
+}
+* { box-sizing:border-box; }
+html, body { margin:0; height:100%; font-family:'Nunito', system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; color:var(--texto); }
+body { display:flex; flex-direction:column; background:#fff; }
+header { display:flex; align-items:center; gap:8px; padding:10px 14px 8px; background:#fff; flex-wrap:wrap; }
+.marca { display:flex; align-items:center; gap:10px; margin-right:10px; }
+.marca img { height:26px; width:auto; display:block; }
+.marca .produto { font-weight:900; font-size:15px; padding:3px 10px 4px; border-radius:999px; background:var(--preto); color:#fff; letter-spacing:.2px; }
+.pontos { height:10px; margin:0 14px 2px; background:
+    radial-gradient(circle at 5px 5px, var(--cor-ponto, #1589C6) 4px, transparent 4.6px) 0 0 / 16px 10px repeat-x;
+    -webkit-mask: linear-gradient(90deg, #000, #000); position:relative; }
+.pontos::before { content:""; position:absolute; inset:0;
+    background:linear-gradient(90deg, #CCE2F7, #72BCE4 30%, #1B98D4 60%, #076CA9);
+    -webkit-mask: radial-gradient(circle at 5px 5px, #000 4px, transparent 4.6px) 0 0 / 16px 10px repeat-x;
+            mask: radial-gradient(circle at 5px 5px, #000 4px, transparent 4.6px) 0 0 / 16px 10px repeat-x; }
+.pontos { background:none; }
+button, .botao { font:inherit; font-size:14px; font-weight:800; border:2px solid var(--borda); border-radius:999px; padding:6px 14px; cursor:pointer; background:#fff; color:var(--texto); }
+button:hover, .botao:hover { border-color:var(--azul); color:var(--azul-escuro); }
+button.principal { background:var(--azul); border-color:var(--azul); color:#fff; }
+button.principal:hover { background:var(--azul-escuro); border-color:var(--azul-escuro); color:#fff; }
+button:disabled { opacity:.5; cursor:default; }
+#btConfig { padding:6px 10px; }
+.espaco { flex:1; }
+#status { font-size:13px; font-weight:700; color:#5b6672; }
+main { flex:1; display:flex; min-height:0; border-top:1px solid var(--borda); }
+#areaBlocos { flex:1; min-width:0; }
+aside { width:36%; min-width:260px; max-width:560px; display:flex; flex-direction:column; border-left:1px solid var(--borda); background:var(--fundo); }
+.abas { display:flex; border-bottom:1px solid var(--borda); background:#fff; }
+.abas button { flex:1; border:0; border-radius:0; padding:10px; background:transparent; color:#5b6672; }
+.abas button:hover { color:var(--texto); }
+.abas button.ativa { color:var(--texto); box-shadow: inset 0 -3px 0 var(--rosa); }
+.painel { flex:1; overflow:auto; display:none; }
+.painel.ativo { display:block; }
+pre { margin:0; padding:12px; font-size:12.5px; line-height:1.45; white-space:pre; font-family: ui-monospace, Menlo, Consolas, monospace; }
+#monitor { background:#0b1118; color:#7fe3a4; min-height:100%; }
+.barraPainel { display:flex; gap:6px; padding:8px; border-top:1px solid var(--borda); background:#fff; flex-wrap:wrap; }
+.barraPainel button { font-size:13px; padding:5px 12px; }
+#aviso { display:none; background:#FFF6E0; color:#6b4500; padding:8px 14px; font-size:13px; font-weight:700; border-top:1px solid #FFE1A3; }
+#progresso { height:4px; background:transparent; }
+#progresso div { height:100%; width:0; background:linear-gradient(90deg, var(--ciano), var(--azul)); transition:width .2s; }
+dialog { border:0; border-radius:16px; padding:20px; max-width:420px; font-family:inherit; }
+dialog p { font-size:14px; }
+dialog h2 { margin-top:0; font-size:19px; font-weight:900; }
+dialog input { width:100%; padding:9px 12px; font:inherit; font-size:14px; border:2px solid var(--borda); border-radius:10px; }
+dialog input:focus { outline:none; border-color:var(--azul); }
+dialog .acoes { display:flex; justify-content:flex-end; gap:8px; margin-top:14px; }
+/* Caixa de categorias do Blockly */
+.blocklyToolboxDiv, .blocklyToolbox { background:var(--fundo) !important; font-family:'Nunito', sans-serif !important; }
+.blocklyTreeLabel { font-family:'Nunito', sans-serif !important; font-weight:800; font-size:14px !important; }
+.blocklyTreeRow { border-radius:0 999px 999px 0; margin-right:6px; height:32px !important; line-height:32px !important; }
+header button { white-space:nowrap; }
+@media (max-width: 760px) { main { flex-direction:column; } aside { width:100%; max-width:none; height:38%; border-left:0; border-top:1px solid var(--borda); } .marca .produto { display:none; } }

@@ -25,7 +25,15 @@ Endereço: https://franpastori.github.io/mannanauta-blocos-/
 
 | Arquivo | O que é |
 |---|---|
-| `index.html` | O editor de blocos (página única) |
+| `index.html` | Estrutura da página do editor |
+| `css/estilo.css` | Visual (identidade manna team) |
+| `img/logo-manna-team.png` | Logo |
+| `js/blocos.js` | Definição dos blocos e cores das categorias |
+| `js/gerador.js` | Transforma os blocos em código para a placa |
+| `js/caixa.js` | Categorias da caixa de blocos e projeto inicial |
+| `js/interface.js` | Área de blocos, abas, salvar/abrir, avisos |
+| `js/placa.js` | Conexão com a placa pelo cabo, envio do programa e monitor |
+| `js/preparar.js` | Preparação da placa (gravação do firmware) |
 | `micropython/mannanauta.py` | Biblioteca da placa em MicroPython (matriz de LEDs e sensor de movimento) |
 | `firmware/` | Firmware oficial do MicroPython para ESP32-S3, baixado de micropython.org |
 | `.github/workflows/firmware.yml` | Ação que baixa/atualiza o firmware (Actions → Atualizar firmware MicroPython → Run workflow) |
