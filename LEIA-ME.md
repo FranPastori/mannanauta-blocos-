@@ -11,15 +11,14 @@ Endereço: https://franpastori.github.io/mannanauta-blocos-/
 
 ## Como usar
 
-1. Ligue a placa no USB e clique em **Conectar placa** (só na primeira vez em cada computador; depois o app
-   conecta sozinho sempre que a placa for ligada no cabo).
-2. Se a placa ainda não estiver preparada, o app avisa e oferece prepará-la: basta clicar em **Preparar agora**
-   (o botão **Preparar placa** faz o mesmo a qualquer momento).
-   Se não funcionar, segure **BOOT**, aperte e solte **RESET**, solte **BOOT** e tente de novo.
-3. Monte o programa com os blocos (o código Python aparece ao lado).
-4. Clique em **Enviar para a placa**. O programa é gravado como `main.py` e começa a rodar.
-   Na primeira vez, a biblioteca `mannanauta.py` também é instalada.
-5. O que o programa escrever aparece na aba **Monitor serial**. O botão **Parar** interrompe o programa.
+1. Ligue a placa no USB e clique em **Conectar placa**. Na primeira vez em cada computador, escolha a porta da placa;
+   depois o app conecta sozinho sempre que a placa for ligada no cabo.
+2. Se a placa ainda não estiver preparada, o app avisa e oferece prepará-la: basta clicar em **Preparar agora**.
+   Se não começar, segure **BOOT**, aperte e solte **RESET**, solte **BOOT** e tente de novo.
+3. Monte o programa com os blocos (o código aparece ao lado).
+4. Clique em **Enviar para a placa**. O programa é gravado e começa a rodar.
+5. O que o programa escrever aparece na aba **Monitor serial**.
+6. Com a placa conectada, o mesmo botão vira **Desconectar placa**.
 
 ## Pastas
 

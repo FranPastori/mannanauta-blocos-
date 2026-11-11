@@ -18,7 +18,7 @@ async function conectar(portaConhecida = null) {
   conexao.porta = porta; conexao.ultimaPorta = porta;
   conexao.escritor = porta.writable.getWriter();
   conexao.leitor = porta.readable.getReader();
-  $('btConectar').textContent = 'Desconectar';
+  $('btConectar').textContent = 'Desconectar placa';
   status('Placa conectada');
   (async () => {
     try {
@@ -149,15 +149,13 @@ async function aoConectar(automatico) {
       status(automatico ? 'Placa conectada automaticamente ✔' : 'Placa conectada ✔');
     } else {
       status('Esta placa ainda não está preparada');
-      pedirInstalacao(true);
+      pedirInstalacao();
     }
   } finally { verificando = false; }
 }
 
-function pedirInstalacao(semMicroPython) {
-  $('txtInstalar').textContent = semMicroPython
-    ? 'Esta placa ainda não está preparada para receber os programas dos blocos. Preparar agora? Leva cerca de 1 minuto e apaga o que estiver gravado na placa.'
-    : 'Faça isso só se a placa for nova ou parar de responder. Tudo o que estiver gravado nela será apagado.';
+function pedirInstalacao() {
+  $('txtInstalar').textContent = 'Esta placa ainda não está preparada para receber os programas dos blocos. Preparar agora? Leva cerca de 1 minuto e apaga o que estiver gravado na placa.';
   if (!$('dlgInstalar').open) $('dlgInstalar').showModal();
 }
 
@@ -197,7 +195,7 @@ $('btEnviar').onclick = async () => {
     catch (e) {
       conexao.silencio = false; progresso(0);
       status('Esta placa ainda não está preparada');
-      pedirInstalacao(true);
+      pedirInstalacao();
       return;
     }
     // Confere se a biblioteca mannanauta.py já está na placa e atualizada
@@ -230,11 +228,6 @@ $('btEnviar').onclick = async () => {
   } finally { bt.disabled = false; }
 };
 
-$('btParar').onclick = async () => {
-  if (!conexao.porta) { status('Conecte a placa primeiro'); return; }
-  await escrever('\x03');
-  status('Programa parado');
-};
 
 function mostrarErro(texto) {
   document.querySelector('.abas button[data-aba="monitor"]').click();

@@ -20,9 +20,7 @@
   <button id="btSalvar" title="Baixar o projeto">Salvar</button>
   <span class="espaco"></span>
   <span id="status">Pronto</span>
-  <button id="btInstalar" title="Só na primeira vez: deixa a placa pronta para receber programas">Preparar placa</button>
-  <button id="btConectar">Conectar placa</button>
-  <button id="btParar" title="Para o programa que está rodando">Parar</button>
+  <button id="btConectar" title="Conecta a placa pelo cabo USB (e prepara a placa, se for preciso)">Conectar placa</button>
   <button id="btEnviar" class="principal">Enviar para a placa</button>
 </header>
 <div class="pontos" aria-hidden="true"></div>
@@ -46,7 +44,7 @@
 
 <dialog id="dlgInstalar">
   <h2>Preparar a placa</h2>
-  <p id="txtInstalar">Faça isso só se a placa for nova ou parar de responder. Tudo o que estiver gravado nela será apagado.</p>
+  <p id="txtInstalar"></p>
   <p>Se não começar, segure o botão <b>BOOT</b>, aperte e solte <b>RESET</b>, solte o <b>BOOT</b> e tente de novo.</p>
   <div class="acoes"><button id="btCancelarInst">Cancelar</button><button id="btConfirmarInst" class="principal">Preparar agora</button></div>
 </dialog>

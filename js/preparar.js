@@ -6,12 +6,15 @@ async function carregarEsptool() {
 }
 
 let instalando = false;
-$('btInstalar').onclick = () => pedirInstalacao(false);
-$('btCancelarInst').onclick = () => $('dlgInstalar').close();
+$('btCancelarInst').onclick = async () => {
+  $('dlgInstalar').close();
+  await desconectar();
+  status('Placa não preparada');
+};
 $('btConfirmarInst').onclick = async () => {
   $('dlgInstalar').close();
   if (!temSerial || emQuadro) { status('Indisponível aqui (veja o aviso)'); return; }
-  const bt = $('btInstalar');
+  const bt = $('btConectar');
   bt.disabled = true; $('btEnviar').disabled = true;
   let transporte = null;
   instalando = true;
