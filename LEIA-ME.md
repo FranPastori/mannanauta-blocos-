@@ -1,70 +1,56 @@
 # mannaNAUTA Blocos
 
-Plataforma de programação em blocos para a placa **mannaNAUTA** (ESP32-S3), que roda no navegador.
-Os blocos geram código C++ que usa as bibliotecas livres de [wuigor](https://github.com/wuigor):
+Plataforma de programação em blocos para a placa **mannaNAUTA** (ESP32-S3), feita para o projeto Manna.
+Roda direto no navegador (Chrome ou Edge de computador) e **não precisa de servidor**: os blocos geram
+**MicroPython**, que é enviado para a placa pelo cabo USB.
 
-- [mannaNAUTA_WS2812_Lib](https://github.com/wuigor/mannaNAUTA_WS2812_Lib): matriz 5x5 de LEDs (pino 47)
-- [mannaNAUTA_LSM6DS_Lib](https://github.com/wuigor/mannaNAUTA_LSM6DS_Lib): acelerômetro e giroscópio (SDA 5, SCL 4)
+Endereço: https://franpastori.github.io/mannanauta-blocos-/
 
-## Como funciona
+## Como usar
 
-1. O aluno monta os blocos e o código C++ aparece ao lado.
-2. Ao clicar em **Enviar para a placa**, o navegador manda o código ao **servidor de compilação**.
-3. O servidor compila para ESP32-S3 e devolve o programa pronto.
-4. O navegador grava o programa na placa pelo cabo USB (Web Serial + esptool-js).
-
-Funciona no **Google Chrome** ou no **Microsoft Edge** de computador. A placa precisa estar ligada no USB.
+1. Ligue a placa no USB.
+2. **Só na primeira vez:** clique em **Instalar MicroPython** e escolha a porta da placa.
+   Se não funcionar, segure **BOOT**, aperte e solte **RESET**, solte **BOOT** e tente de novo.
+3. Monte o programa com os blocos (o código Python aparece ao lado).
+4. Clique em **Enviar para a placa**. O programa é gravado como `main.py` e começa a rodar.
+   Na primeira vez, a biblioteca `mannanauta.py` também é instalada.
+5. O que o programa escrever aparece na aba **Monitor serial**. O botão **Parar** interrompe o programa.
 
 ## Pastas
 
 | Arquivo | O que é |
 |---|---|
 | `index.html` | O editor de blocos (página única) |
-| `servidor/server.js` | Servidor de compilação (Node, sem dependências) |
-| `servidor/Dockerfile` | Monta o servidor com arduino-cli, núcleo ESP32 e as duas bibliotecas |
-| `servidor/teste.ino` | Programa de teste que usa todos os blocos (compilado durante a montagem) |
+| `micropython/mannanauta.py` | Biblioteca da placa em MicroPython (matriz de LEDs e sensor de movimento) |
+| `firmware/` | Firmware oficial do MicroPython para ESP32-S3, baixado de micropython.org |
+| `.github/workflows/firmware.yml` | Ação que baixa/atualiza o firmware (Actions → Atualizar firmware MicroPython → Run workflow) |
 
-## Publicar o editor (GitHub Pages)
+## Biblioteca mannanauta.py
 
-1. Crie um repositório no GitHub e envie `index.html` para ele.
-2. Em **Settings → Pages**, escolha a branch `main` e a pasta raiz.
-3. O editor fica em `https://SEU-USUARIO.github.io/NOME-DO-REPOSITORIO/`.
+É a versão em MicroPython das bibliotecas livres de [wuigor](https://github.com/wuigor) (licença MIT):
 
-## Publicar o servidor (Render)
+- [mannaNAUTA_WS2812_Lib](https://github.com/wuigor/mannaNAUTA_WS2812_Lib) → classe `Matriz` (pino 47, 25 LEDs).
+  Os desenhos de letras, números, símbolos e carinhas foram copiados da biblioteca original.
+- [mannaNAUTA_LSM6DS_Lib](https://github.com/wuigor/mannaNAUTA_LSM6DS_Lib) → classe `Sensor` (SDA 5, SCL 4, endereço 0x6A ou 0x6B),
+  com a mesma configuração inicial e a mesma correção de orientação da placa.
 
-1. No Render, crie um **Web Service** apontando para a pasta `servidor` do repositório (Runtime: **Docker**).
-2. A primeira montagem demora (baixa o núcleo ESP32, que é grande).
-3. Abra o endereço do serviço: deve aparecer `{"ok":true,...}`.
-4. No editor, clique em **⚙** e cole o endereço do servidor.
-   Para deixar fixo para todos, preencha `SERVIDOR_PADRAO` no começo do script do `index.html`.
+Também pode ser usada sem os blocos, em qualquer editor de MicroPython (Thonny, por exemplo):
 
-Variáveis de ambiente opcionais:
+```python
+from mannanauta import *
+matriz = Matriz()
+sensor = Sensor()
+matriz.emocao("=]", 0x00FF00)
+print(sensor.aceleracao())
+```
 
-- `FQBN`: placa usada na compilação. Padrão: `esp32:esp32:esp32s3:CDCOnBoot=cdc` (Serial pela USB nativa).
-- `ORIGENS`: endereços que podem usar o servidor, separados por vírgula. Padrão: `*`. Recomendado: o endereço do GitHub Pages.
-
-Compilar para ESP32 usa bastante memória. O plano gratuito do Render (512 MB) pode não dar conta; se as compilações falharem por memória, use um plano maior ou outro serviço com Docker.
-
-## Se a placa não for encontrada
-
-- Use um cabo USB que transmita dados (alguns só carregam).
-- Se a gravação não começar, segure o botão **BOOT**, aperte e solte **RESET**, solte o **BOOT** e tente de novo.
-
-## Blocos disponíveis
-
-- **Eventos:** quando a placa ligar, repetir para sempre
-- **Controle:** esperar (segundos ou milissegundos), repetir, se/senão, enquanto, contar, sair do laço, tempo desde que ligou
-- **Matriz de LEDs:** carinha, letra, número, texto, símbolo, desenho 5x5, LED por coluna/linha, LED por número, todos os LEDs, apagar, brilho
-- **Cores:** cores prontas, cor por vermelho/verde/azul, cor do arco-íris
-- **Sensor de movimento:** placa inclinada (frente, trás, direita, esquerda, nivelada), inclinação em graus, placa sacudida, aceleração, giro, temperatura, passos, zerar passos
-- **Monitor serial:** escrever um valor, escrever nome e valor
-- **Operadores e Variáveis**
+Ao mudar a biblioteca, aumente o número em `VERSAO = "..."` para o editor reinstalá-la nas placas.
 
 ## Ainda falta conferir na placa
 
-- Se o sentido de **frente/trás/direita/esquerda** bate com a placa (a lógica é a mesma do exemplo AxisOrientationMatrix da biblioteca).
+- Se o sentido de frente/trás/direita/esquerda bate com a placa.
 - Os desenhos das carinhas `=s` e `=S`.
-- O bloco **placa sacudida** (usa o recurso de "wake-up" do sensor) e o **contador de passos**.
-- Se a placa usa a USB nativa do ESP32-S3 (padrão do servidor) ou um chip conversor USB-serial.
+- Os blocos "placa sacudida" e "número de passos".
+- A instalação do MicroPython pelo navegador na placa real.
 
-Licença MIT, como as bibliotecas usadas.
+Licença MIT, como as bibliotecas originais.

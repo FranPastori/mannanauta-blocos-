@@ -65,6 +65,7 @@
   .blocklyToolboxDiv, .blocklyToolbox { background:var(--fundo) !important; font-family:'Nunito', sans-serif !important; }
   .blocklyTreeLabel { font-family:'Nunito', sans-serif !important; font-weight:800; font-size:14px !important; }
   .blocklyTreeRow { border-radius:0 999px 999px 0; margin-right:6px; height:32px !important; line-height:32px !important; }
+  header button { white-space:nowrap; }
   @media (max-width: 760px) { main { flex-direction:column; } aside { width:100%; max-width:none; height:38%; border-left:0; border-top:1px solid var(--borda); } .marca .produto { display:none; } }
 </style>
 </head>
@@ -76,7 +77,9 @@
   <button id="btSalvar" title="Baixar o projeto">Salvar</button>
   <span class="espaco"></span>
   <span id="status">Pronto</span>
-  <button id="btConfig" title="Endereço do servidor de compilação">⚙</button>
+  <button id="btInstalar" title="Só na primeira vez: instala o MicroPython na placa">Instalar MicroPython</button>
+  <button id="btConectar">Conectar placa</button>
+  <button id="btParar" title="Para o programa que está rodando">Parar</button>
   <button id="btEnviar" class="principal">Enviar para a placa</button>
 </header>
 <div class="pontos" aria-hidden="true"></div>
@@ -86,36 +89,34 @@
   <div id="areaBlocos"></div>
   <aside>
     <div class="abas">
-      <button data-aba="codigo" class="ativa">Código C++</button>
+      <button data-aba="codigo" class="ativa">Código Python</button>
       <button data-aba="monitor">Monitor serial</button>
     </div>
     <div id="painel-codigo" class="painel ativo"><pre id="codigo"></pre></div>
     <div id="painel-monitor" class="painel"><pre id="monitor"></pre></div>
     <div class="barraPainel">
       <button id="btCopiar">Copiar código</button>
-      <button id="btMonitor">Conectar monitor</button>
       <button id="btLimparMonitor">Limpar monitor</button>
     </div>
   </aside>
 </main>
 
-<dialog id="dlgConfig">
-  <h2>Servidor de compilação</h2>
-  <p style="font-size:14px">Endereço do servidor que transforma o código em programa para o ESP32-S3.</p>
-  <input id="urlServidor" placeholder="https://seu-servidor.onrender.com">
-  <div class="acoes"><button id="btCancelarCfg">Cancelar</button><button id="btSalvarCfg" class="principal">Salvar</button></div>
+<dialog id="dlgInstalar">
+  <h2>Instalar o MicroPython</h2>
+  <p style="font-size:14px">Faça isso só na primeira vez que usar a placa (ou se ela parar de responder). Tudo o que estiver gravado na placa será apagado.</p>
+  <p style="font-size:14px">Ligue a placa no cabo USB e escolha a porta dela na próxima janela. Se não funcionar, segure o botão <b>BOOT</b>, aperte e solte <b>RESET</b>, solte o <b>BOOT</b> e tente de novo.</p>
+  <div class="acoes"><button id="btCancelarInst">Cancelar</button><button id="btConfirmarInst" class="principal">Instalar</button></div>
 </dialog>
 
 <script>
 /* =====================================================================
    mannaNAUTA Blocos — editor de blocos para a placa mannaNAUTA (ESP32-S3)
-   Usa as bibliotecas livres de wuigor:
+   Os blocos geram MicroPython. A biblioteca micropython/mannanauta.py é a
+   versão em Python das bibliotecas livres de wuigor:
      mannaNAUTA_WS2812_Lib  (matriz 5x5 de LEDs, pino 47)
      mannaNAUTA_LSM6DS_Lib  (acelerômetro/giroscópio, SDA 5 / SCL 4)
    ===================================================================== */
 
-// Endereço padrão do servidor de compilação (pode ser trocado no ⚙).
-const SERVIDOR_PADRAO = '';
 
 const armazenar = {
   ler(k, padrao) { try { const v = localStorage.getItem(k); return v === null ? padrao : v; } catch (e) { return padrao; } },
@@ -221,25 +222,26 @@ for (const [categoria, tipos] of Object.entries(RECOLORIR)) {
   }
 }
 
-/* ---------------------- Gerador de C++ (Arduino) --------------------- */
-const Cpp = new Blockly.CodeGenerator('Cpp');
-Cpp.ORDER_ATOMIC = 0; Cpp.ORDER_UNARY = 3; Cpp.ORDER_MULT = 5; Cpp.ORDER_ADD = 6;
-Cpp.ORDER_REL = 9; Cpp.ORDER_EQ = 10; Cpp.ORDER_AND = 14; Cpp.ORDER_OR = 15; Cpp.ORDER_NONE = 99;
-Cpp.INDENT = '  ';
-Cpp.addReservedWords('setup,loop,strip,imu,delay,millis,random,int,float,bool,char,void,if,else,for,while,do,return,true,false,Serial,constrain,map,abs,sqrt,atan2,PI,mnLed,mnDesenho,mnTexto,mnAceleracao,mnGiro,mnAngulo,mnInclinacao,mnCorRGB,mnSacudida');
+/* ---------------------- Gerador de MicroPython ----------------------- */
+const Py = new Blockly.CodeGenerator('MicroPython');
+Py.ORDER_ATOMIC = 0; Py.ORDER_EXP = 3; Py.ORDER_UNARY = 4; Py.ORDER_MULT = 5; Py.ORDER_ADD = 6;
+Py.ORDER_REL = 11; Py.ORDER_NOT = 12; Py.ORDER_AND = 13; Py.ORDER_OR = 14; Py.ORDER_NONE = 99;
+Py.INDENT = '    ';
+Py.addReservedWords('False,None,True,and,as,assert,break,class,continue,def,del,elif,else,except,finally,for,from,global,if,import,in,is,lambda,nonlocal,not,or,pass,raise,return,try,while,with,yield,' +
+  'time,math,random,print,int,float,str,range,abs,round,matriz,sensor,Matriz,Sensor,contar,cor_rgb,cor_arco,cor_hsv,mannanauta');
 
-Cpp.init = function (ws) {
+Py.init = function (ws) {
   Object.getPrototypeOf(this).init.call(this, ws);
   this.usa = new Set();
   if (!this.nameDB_) this.nameDB_ = new Blockly.Names(this.RESERVED_WORDS_);
   else this.nameDB_.reset();
   this.nameDB_.setVariableMap(ws.getVariableMap());
   this.nameDB_.populateVariables(ws);
-  // Nomes de variável legíveis em C++: "posição" vira "posicao"
+  // Nomes de variável legíveis: "posição" vira "posicao"
   this.nomesVar = new Map();
   const usados = new Set(this.RESERVED_WORDS_.split(','));
   for (const va of ws.getVariableMap().getAllVariables()) {
-    let n = va.name.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^A-Za-z0-9_]+/g, '_').replace(/^_+|_+$/g, '');
+    let n = va.name.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^A-Za-z0-9_]+/g, '_').replace(/^_+|_+$/g, '');
     if (!n) n = 'variavel';
     if (/^[0-9]/.test(n)) n = 'v_' + n;
     let final = n, k = 2;
@@ -248,263 +250,181 @@ Cpp.init = function (ws) {
     this.nomesVar.set(va.getId(), final);
   }
 };
-Cpp.scrub_ = function (block, code, thisOnly) {
+Py.scrub_ = function (block, code, thisOnly) {
   const prox = block.nextConnection && block.nextConnection.targetBlock();
   return code + (prox && !thisOnly ? this.blockToCode(prox) : '');
 };
-Cpp.scrubNakedValue = (line) => line + ';\n';
-Cpp.nomeVar = function (id) { return this.nomesVar.get(id) || this.nameDB_.getName(id, Blockly.Names.NameType.VARIABLE); };
-const v = (b, nome, ordem, padrao = '0') => Cpp.valueToCode(b, nome, ordem ?? Cpp.ORDER_NONE) || padrao;
-const cor = (b) => { Cpp.usa.add('matriz'); return v(b, 'COR', Cpp.ORDER_NONE, '0x00FF00'); };
-const f = Cpp.forBlock;
+Py.scrubNakedValue = (line) => line + '\n';
+Py.nomeVar = function (id) { return this.nomesVar.get(id) || this.nameDB_.getName(id, Blockly.Names.NameType.VARIABLE); };
+Py.corpo = function (b, nome) { return this.statementToCode(b, nome) || this.INDENT + 'pass\n'; };
+const v = (b, nome, ordem, padrao = '0') => Py.valueToCode(b, nome, ordem ?? Py.ORDER_NONE) || padrao;
+const usaMatriz = () => Py.usa.add('matriz');
+const cor = (b) => { usaMatriz(); return v(b, 'COR', Py.ORDER_NONE, '0x00FF00'); };
+const f = Py.forBlock;
 
 // Blocos padrão do Blockly
-f['math_number'] = (b) => { const n = Number(b.getFieldValue('NUM')); return [String(n), n < 0 ? Cpp.ORDER_UNARY : Cpp.ORDER_ATOMIC]; };
+f['math_number'] = (b) => { const n = Number(b.getFieldValue('NUM')); return [String(n), n < 0 ? Py.ORDER_UNARY : Py.ORDER_ATOMIC]; };
 f['math_arithmetic'] = (b) => {
   const op = b.getFieldValue('OP');
-  const t = { ADD:['+', Cpp.ORDER_ADD], MINUS:['-', Cpp.ORDER_ADD], MULTIPLY:['*', Cpp.ORDER_MULT], DIVIDE:['/', Cpp.ORDER_MULT] }[op];
-  const a = v(b, 'A', t ? t[1] : Cpp.ORDER_NONE), c = v(b, 'B', t ? t[1] : Cpp.ORDER_NONE);
-  if (op === 'POWER') return [`pow(${a}, ${c})`, Cpp.ORDER_ATOMIC];
-  if (op === 'DIVIDE') return [`((float)(${a}) / (${c}))`, Cpp.ORDER_ATOMIC];
-  return [`${a} ${t[0]} ${c}`, t[1]];
+  const t = { ADD:['+', Py.ORDER_ADD], MINUS:['-', Py.ORDER_ADD], MULTIPLY:['*', Py.ORDER_MULT], DIVIDE:['/', Py.ORDER_MULT], POWER:['**', Py.ORDER_EXP] }[op];
+  return [`${v(b,'A',t[1])} ${t[0]} ${v(b,'B',t[1])}`, t[1]];
 };
-f['math_modulo'] = (b) => [`((long)(${v(b,'DIVIDEND')}) % (long)(${v(b,'DIVISOR','',"1")}))`, Cpp.ORDER_ATOMIC];
-f['math_random_int'] = (b) => [`random(${v(b,'FROM')}, (${v(b,'TO')}) + 1)`, Cpp.ORDER_ATOMIC];
+f['math_modulo'] = (b) => [`${v(b,'DIVIDEND',Py.ORDER_MULT)} % ${v(b,'DIVISOR',Py.ORDER_MULT,'1')}`, Py.ORDER_MULT];
+f['math_random_int'] = (b) => { Py.usa.add('random'); return [`random.randint(int(${v(b,'FROM')}), int(${v(b,'TO')}))`, Py.ORDER_ATOMIC]; };
 f['math_round'] = (b) => {
-  const fn = { ROUND:'round', ROUNDUP:'ceil', ROUNDDOWN:'floor' }[b.getFieldValue('OP')];
-  return [`${fn}(${v(b,'NUM')})`, Cpp.ORDER_ATOMIC];
+  const op = b.getFieldValue('OP'), x = v(b, 'NUM');
+  if (op === 'ROUND') return [`round(${x})`, Py.ORDER_ATOMIC];
+  Py.usa.add('math');
+  return [`math.${op === 'ROUNDUP' ? 'ceil' : 'floor'}(${x})`, Py.ORDER_ATOMIC];
 };
 f['math_single'] = (b) => {
   const op = b.getFieldValue('OP'), x = v(b, 'NUM');
-  const t = { ROOT:`sqrt(${x})`, ABS:`fabs(${x})`, NEG:`-(${x})`, LN:`log(${x})`, LOG10:`log10(${x})`, EXP:`exp(${x})`, POW10:`pow(10, ${x})` };
-  return [t[op] || x, Cpp.ORDER_ATOMIC];
+  if (op === 'ABS') return [`abs(${x})`, Py.ORDER_ATOMIC];
+  if (op === 'NEG') return [`-(${x})`, Py.ORDER_UNARY];
+  if (op === 'POW10') return [`10 ** (${x})`, Py.ORDER_EXP];
+  Py.usa.add('math');
+  const t = { ROOT:`math.sqrt(${x})`, LN:`math.log(${x})`, LOG10:`(math.log(${x}) / math.log(10))`, EXP:`math.exp(${x})` };
+  return [t[op] || x, Py.ORDER_ATOMIC];
 };
-f['logic_boolean'] = (b) => [b.getFieldValue('BOOL') === 'TRUE' ? 'true' : 'false', Cpp.ORDER_ATOMIC];
-f['logic_negate'] = (b) => [`!(${v(b,'BOOL',Cpp.ORDER_NONE,'false')})`, Cpp.ORDER_UNARY];
+f['logic_boolean'] = (b) => [b.getFieldValue('BOOL') === 'TRUE' ? 'True' : 'False', Py.ORDER_ATOMIC];
+f['logic_negate'] = (b) => [`not ${v(b,'BOOL',Py.ORDER_NOT,'False')}`, Py.ORDER_NOT];
 f['logic_operation'] = (b) => {
-  const e = b.getFieldValue('OP') === 'AND', o = e ? Cpp.ORDER_AND : Cpp.ORDER_OR;
-  return [`${v(b,'A',o,'false')} ${e ? '&&' : '||'} ${v(b,'B',o,'false')}`, o];
+  const e = b.getFieldValue('OP') === 'AND', o = e ? Py.ORDER_AND : Py.ORDER_OR;
+  return [`${v(b,'A',o,'False')} ${e ? 'and' : 'or'} ${v(b,'B',o,'False')}`, o];
 };
 f['logic_compare'] = (b) => {
   const op = { EQ:'==', NEQ:'!=', LT:'<', LTE:'<=', GT:'>', GTE:'>=' }[b.getFieldValue('OP')];
-  const o = (op === '==' || op === '!=') ? Cpp.ORDER_EQ : Cpp.ORDER_REL;
-  return [`${v(b,'A',o)} ${op} ${v(b,'B',o)}`, o];
+  return [`${v(b,'A',Py.ORDER_REL)} ${op} ${v(b,'B',Py.ORDER_REL)}`, Py.ORDER_REL];
 };
 f['controls_if'] = (b) => {
   let code = '';
   for (let i = 0; b.getInput('IF' + i); i++) {
-    code += (i ? ' else if (' : 'if (') + v(b, 'IF' + i, Cpp.ORDER_NONE, 'false') + ') {\n' + Cpp.statementToCode(b, 'DO' + i) + '}';
+    code += (i ? 'elif ' : 'if ') + v(b, 'IF' + i, Py.ORDER_NONE, 'False') + ':\n' + Py.corpo(b, 'DO' + i);
   }
-  if (b.getInput('ELSE')) code += ' else {\n' + Cpp.statementToCode(b, 'ELSE') + '}';
-  return code + '\n';
+  if (b.getInput('ELSE')) code += 'else:\n' + Py.corpo(b, 'ELSE');
+  return code;
 };
 f['controls_repeat_ext'] = (b) => {
-  const i = Cpp.nameDB_.getDistinctName('i', Blockly.Names.NameType.VARIABLE);
-  return `for (int ${i} = 0; ${i} < (int)(${v(b,'TIMES')}); ${i}++) {\n${Cpp.statementToCode(b,'DO')}}\n`;
+  const i = Py.nameDB_.getDistinctName('_i', Blockly.Names.NameType.VARIABLE);
+  return `for ${i} in range(int(${v(b,'TIMES')})):\n${Py.corpo(b,'DO')}`;
 };
 f['controls_whileUntil'] = (b) => {
-  let c = v(b, 'BOOL', Cpp.ORDER_NONE, 'false');
-  if (b.getFieldValue('MODE') === 'UNTIL') c = `!(${c})`;
-  return `while (${c}) {\n${Cpp.statementToCode(b,'DO')}  delay(1);\n}\n`;
+  let c = v(b, 'BOOL', Py.ORDER_NONE, 'False');
+  if (b.getFieldValue('MODE') === 'UNTIL') c = `not (${c})`;
+  return `while ${c}:\n${Py.corpo(b,'DO')}`;
 };
 f['controls_for'] = (b) => {
-  const n = Cpp.nomeVar(b.getFieldValue('VAR'));
-  const de = v(b,'FROM'), ate = v(b,'TO'), passo = v(b,'BY',Cpp.ORDER_NONE,'1');
-  return `for (${n} = ${de}; (${passo}) > 0 ? ${n} <= ${ate} : ${n} >= ${ate}; ${n} += ${passo}) {\n${Cpp.statementToCode(b,'DO')}}\n`;
+  const n = Py.nomeVar(b.getFieldValue('VAR'));
+  return `for ${n} in contar(${v(b,'FROM')}, ${v(b,'TO')}, ${v(b,'BY',Py.ORDER_NONE,'1')}):\n${Py.corpo(b,'DO')}`;
 };
 f['controls_flow_statements'] = (b) => {
   const lacos = ['controls_repeat_ext', 'controls_whileUntil', 'controls_for'];
   let pai = b.getSurroundParent();
   while (pai && !lacos.includes(pai.type)) pai = pai.getSurroundParent();
-  if (!pai) return '// (bloco "sair do laço" fora de um laço foi ignorado)\n';
-  return b.getFieldValue('FLOW') === 'BREAK' ? 'break;\n' : 'continue;\n';
+  if (!pai) return '# (bloco "sair do laço" fora de um laço foi ignorado)\n';
+  return b.getFieldValue('FLOW') === 'BREAK' ? 'break\n' : 'continue\n';
 };
-f['variables_get'] = (b) => [Cpp.nomeVar(b.getFieldValue('VAR')), Cpp.ORDER_ATOMIC];
-f['variables_set'] = (b) => `${Cpp.nomeVar(b.getFieldValue('VAR'))} = ${v(b,'VALUE')};\n`;
-f['math_change'] = (b) => `${Cpp.nomeVar(b.getFieldValue('VAR'))} += ${v(b,'DELTA')};\n`;
-f['text'] = (b) => [JSON.stringify(b.getFieldValue('TEXT')), Cpp.ORDER_ATOMIC];
+f['variables_get'] = (b) => [Py.nomeVar(b.getFieldValue('VAR')), Py.ORDER_ATOMIC];
+f['variables_set'] = (b) => `${Py.nomeVar(b.getFieldValue('VAR'))} = ${v(b,'VALUE')}\n`;
+f['math_change'] = (b) => `${Py.nomeVar(b.getFieldValue('VAR'))} += ${v(b,'DELTA')}\n`;
+f['text'] = (b) => [JSON.stringify(b.getFieldValue('TEXT')), Py.ORDER_ATOMIC];
 
 // Eventos e controle
 f['mn_ao_ligar'] = () => ''; f['mn_sempre'] = () => '';
-f['mn_esperar'] = (b) => `delay((unsigned long)((${v(b,'S')}) * 1000));\n`;
-f['mn_esperar_ms'] = (b) => `delay((unsigned long)(${v(b,'MS')}));\n`;
-f['mn_tempo'] = () => ['millis()', Cpp.ORDER_ATOMIC];
+f['mn_esperar'] = (b) => `time.sleep(${v(b,'S')})\n`;
+f['mn_esperar_ms'] = (b) => `time.sleep_ms(int(${v(b,'MS')}))\n`;
+f['mn_tempo'] = () => ['time.ticks_ms()', Py.ORDER_ATOMIC];
 
 // Matriz
-f['mn_brilho'] = (b) => { Cpp.usa.add('matriz'); return `strip.setBrightness(map(constrain((int)(${v(b,'B')}), 0, 100), 0, 100, 0, 255));\n`; };
-f['mn_limpar'] = () => { Cpp.usa.add('matriz'); return 'strip.clear();\n'; };
-f['mn_todos'] = (b) => `strip.setAllLedsColor(${cor(b)});\n`;
-f['mn_led_xy'] = (b) => { const c = cor(b); Cpp.usa.add('led'); return `mnLed(((int)(${v(b,'Y')}) - 1) * 5 + ((int)(${v(b,'X')}) - 1), ${c});\n`; };
-f['mn_led_n'] = (b) => { const c = cor(b); Cpp.usa.add('led'); return `mnLed((int)(${v(b,'N')}) - 1, ${c});\n`; };
-f['mn_preparar_xy'] = (b) => { const c = cor(b); Cpp.usa.add('preparar'); return `mnPreparar(((int)(${v(b,'Y')}) - 1) * 5 + ((int)(${v(b,'X')}) - 1), ${c});\n`; };
-f['mn_preparar_n'] = (b) => { const c = cor(b); Cpp.usa.add('preparar'); return `mnPreparar((int)(${v(b,'N')}) - 1, ${c});\n`; };
-f['mn_preparar_limpar'] = () => { Cpp.usa.add('matriz'); return 'strip.setAllLedsColorData((uint32_t)0);\n'; };
-f['mn_mostrar'] = () => { Cpp.usa.add('matriz'); return 'strip.show();\n'; };
+f['mn_brilho'] = (b) => { usaMatriz(); return `matriz.brilho(${v(b,'B')})\n`; };
+f['mn_limpar'] = () => { usaMatriz(); return 'matriz.limpar()\n'; };
+f['mn_todos'] = (b) => `matriz.todos(${cor(b)})\n`;
+f['mn_led_xy'] = (b) => { const c = cor(b); return `matriz.led_xy(${v(b,'X')}, ${v(b,'Y')}, ${c})\n`; };
+f['mn_led_n'] = (b) => { const c = cor(b); return `matriz.led(int(${v(b,'N')}) - 1, ${c})\n`; };
+f['mn_preparar_xy'] = (b) => { const c = cor(b); return `matriz.preparar_xy(${v(b,'X')}, ${v(b,'Y')}, ${c})\n`; };
+f['mn_preparar_n'] = (b) => { const c = cor(b); return `matriz.preparar(int(${v(b,'N')}) - 1, ${c})\n`; };
+f['mn_preparar_limpar'] = () => { usaMatriz(); return 'matriz.preparar_todos(0)\n'; };
+f['mn_mostrar'] = () => { usaMatriz(); return 'matriz.mostrar()\n'; };
 f['mn_letra'] = (b) => {
   const c = cor(b);
   let l = (b.getFieldValue('L') || 'A').trim().toUpperCase().charAt(0);
   if (!/[A-Z]/.test(l)) l = 'A';
-  return `strip.writeWord('${l}', ${c});\n`;
+  return `matriz.letra("${l}", ${c})\n`;
 };
-f['mn_numero'] = (b) => { const c = cor(b); return `strip.writeNumber(constrain((int)(${v(b,'N')}), 0, 9), ${c});\n`; };
-f['mn_texto'] = (b) => { const c = cor(b); Cpp.usa.add('texto'); return `mnTexto(${JSON.stringify(b.getFieldValue('T') || '')}, ${c}, ${v(b,'S',Cpp.ORDER_NONE,'0.5')});\n`; };
-f['mn_simbolo'] = (b) => { const c = cor(b); const s = b.getFieldValue('S'); return `strip.writeSymbol('${s === "'" ? "\\'" : s}', ${c});\n`; };
-f['mn_emocao'] = (b) => { const c = cor(b); return `strip.writeEmotion('${b.getFieldValue('E')}', ${c});\n`; };
+f['mn_numero'] = (b) => { const c = cor(b); return `matriz.numero(${v(b,'N')}, ${c})\n`; };
+f['mn_texto'] = (b) => { const c = cor(b); return `matriz.texto(${JSON.stringify(b.getFieldValue('T') || '')}, ${c}, ${v(b,'S',Py.ORDER_NONE,'0.5')})\n`; };
+f['mn_simbolo'] = (b) => { const c = cor(b); return `matriz.simbolo(${JSON.stringify(b.getFieldValue('S'))}, ${c})\n`; };
+f['mn_emocao'] = (b) => { const c = cor(b); return `matriz.emocao("${b.getFieldValue('E')}", ${c})\n`; };
 f['mn_desenho'] = (b) => {
-  const c = cor(b); Cpp.usa.add('desenho');
+  const c = cor(b);
   let bits = '';
   for (let i = 0; i < 25; i++) bits += b.getFieldValue('P' + i) === 'TRUE' ? '1' : '0';
-  return `mnDesenho("${bits}", ${c});\n`;
+  return `matriz.desenho("${bits}", ${c})\n`;
 };
 
 // Cores
-f['mn_cor'] = (b) => [b.getFieldValue('COR'), Cpp.ORDER_ATOMIC];
-f['mn_cor_rgb'] = (b) => { Cpp.usa.add('rgb'); return [`mnCorRGB(${v(b,'R')}, ${v(b,'G')}, ${v(b,'B')})`, Cpp.ORDER_ATOMIC]; };
-f['mn_cor_hsv'] = (b) => { Cpp.usa.add('matriz'); return [`strip.hsv2rgb((uint32_t)constrain((int)(${v(b,'H')}), 0, 360), (uint32_t)constrain((int)(${v(b,'S')}), 0, 100), (uint32_t)constrain((int)(${v(b,'V')}), 0, 100))`, Cpp.ORDER_ATOMIC]; };
-f['mn_cor_arco'] = (b) => { Cpp.usa.add('matriz'); return [`strip.Wheel((byte)((int)(${v(b,'P')}) & 0xFF))`, Cpp.ORDER_ATOMIC]; };
+f['mn_cor'] = (b) => [b.getFieldValue('COR'), Py.ORDER_ATOMIC];
+f['mn_cor_rgb'] = (b) => [`cor_rgb(${v(b,'R')}, ${v(b,'G')}, ${v(b,'B')})`, Py.ORDER_ATOMIC];
+f['mn_cor_hsv'] = (b) => [`cor_hsv(${v(b,'H')}, ${v(b,'S')}, ${v(b,'V')})`, Py.ORDER_ATOMIC];
+f['mn_cor_arco'] = (b) => [`cor_arco(${v(b,'P')})`, Py.ORDER_ATOMIC];
 
 // Sensor
-const sensor = (extra) => { Cpp.usa.add('sensor'); if (extra) Cpp.usa.add(extra); };
-f['mn_aceleracao'] = (b) => { sensor('acel'); return [`mnAceleracao('${b.getFieldValue('EIXO')}')`, Cpp.ORDER_ATOMIC]; };
-f['mn_giro'] = (b) => { sensor('giro'); return [`mnGiro('${b.getFieldValue('EIXO')}')`, Cpp.ORDER_ATOMIC]; };
-f['mn_angulo'] = (b) => { sensor('angulo'); return [`mnAngulo(${b.getFieldValue('TIPO') === 'rol' ? 'true' : 'false'})`, Cpp.ORDER_ATOMIC]; };
-f['mn_inclinada'] = (b) => { sensor('inclinacao'); return [`(mnInclinacao() == ${b.getFieldValue('DIR')})`, Cpp.ORDER_ATOMIC]; };
-f['mn_sacudida'] = () => { sensor('sacudida'); return ['mnSacudida()', Cpp.ORDER_ATOMIC]; };
-f['mn_sensibilidade'] = (b) => { sensor('sacudida'); return `imu.enableWakeup(true, 0, ${b.getFieldValue('NIVEL')});\n`; };
-f['mn_faixa_acel'] = (b) => { sensor(); return `imu.setAccelRange(LSM6DS_ACCEL_RANGE_${b.getFieldValue('F')}_G);\n`; };
-f['mn_faixa_giro'] = (b) => { sensor(); return `imu.setGyroRange(LSM6DS_GYRO_RANGE_${b.getFieldValue('F')}_DPS);\n`; };
-f['mn_conectado'] = () => { sensor(); return ['imu.connected()', Cpp.ORDER_ATOMIC]; };
-f['mn_nome_sensor'] = () => { sensor(); return ['imu.variantName()', Cpp.ORDER_ATOMIC]; };
-f['mn_temperatura'] = () => { sensor(); return ['imu.readTemperature()', Cpp.ORDER_ATOMIC]; };
-f['mn_passos'] = () => { sensor('passos'); return ['(int)imu.readPedometer()', Cpp.ORDER_ATOMIC]; };
-f['mn_zerar_passos'] = () => { sensor('passos'); return 'imu.resetPedometer();\n'; };
+const sensor = (extra) => { Py.usa.add('sensor'); if (extra) Py.usa.add(extra); };
+f['mn_aceleracao'] = (b) => { sensor(); return [`sensor.aceleracao_eixo("${b.getFieldValue('EIXO')}")`, Py.ORDER_ATOMIC]; };
+f['mn_giro'] = (b) => { sensor(); return [`sensor.giro_eixo("${b.getFieldValue('EIXO')}")`, Py.ORDER_ATOMIC]; };
+f['mn_angulo'] = (b) => { sensor(); return [`sensor.angulo(${b.getFieldValue('TIPO') === 'rol' ? 'True' : 'False'})`, Py.ORDER_ATOMIC]; };
+f['mn_inclinada'] = (b) => { sensor(); return [`sensor.inclinacao() == ${b.getFieldValue('DIR')}`, Py.ORDER_REL]; };
+f['mn_sacudida'] = () => { sensor('sacudida'); return ['sensor.sacudida()', Py.ORDER_ATOMIC]; };
+f['mn_temperatura'] = () => { sensor(); return ['sensor.temperatura()', Py.ORDER_ATOMIC]; };
+f['mn_passos'] = () => { sensor('passos'); return ['sensor.passos()', Py.ORDER_ATOMIC]; };
+f['mn_zerar_passos'] = () => { sensor('passos'); return 'sensor.zerar_passos()\n'; };
+f['mn_sensibilidade'] = (b) => { sensor('sacudida'); return `sensor.sensibilidade(${b.getFieldValue('NIVEL')})\n`; };
+f['mn_faixa_acel'] = (b) => { sensor(); return `sensor.faixa_acelerometro(${b.getFieldValue('F')})\n`; };
+f['mn_faixa_giro'] = (b) => { sensor(); return `sensor.faixa_giroscopio(${b.getFieldValue('F')})\n`; };
+f['mn_conectado'] = () => { sensor(); return ['sensor.conectado', Py.ORDER_ATOMIC]; };
+f['mn_nome_sensor'] = () => { sensor(); return ['sensor.nome()', Py.ORDER_ATOMIC]; };
 
 // Monitor serial
-f['mn_escrever'] = (b) => { Cpp.usa.add('serial'); return `Serial.println(${v(b,'V',Cpp.ORDER_NONE,'""')});\n`; };
-f['mn_escrever_dois'] = (b) => { Cpp.usa.add('serial'); return `Serial.print(${v(b,'A',Cpp.ORDER_NONE,'""')});\nSerial.print(" ");\nSerial.println(${v(b,'B',Cpp.ORDER_NONE,'""')});\n`; };
+f['mn_escrever'] = (b) => `print(${v(b,'V',Py.ORDER_NONE,'""')})\n`;
+f['mn_escrever_dois'] = (b) => `print(${v(b,'A',Py.ORDER_NONE,'""')}, ${v(b,'B',Py.ORDER_NONE,'""')})\n`;
 
-/* Monta o programa completo (.ino) a partir da área de blocos. */
+/* Monta o programa completo (main.py) a partir da área de blocos. */
 function gerarPrograma(ws) {
-  Cpp.init(ws);
+  Py.init(ws);
   let setup = '', loop = '';
   const soltos = [];
   for (const topo of ws.getTopBlocks(true)) {
     if (!topo.isEnabled()) continue;
-    if (topo.type === 'mn_ao_ligar') setup += Cpp.statementToCode(topo, 'CORPO');
-    else if (topo.type === 'mn_sempre') loop += Cpp.statementToCode(topo, 'CORPO');
+    if (topo.type === 'mn_ao_ligar') { const p = topo.getInputTargetBlock('CORPO'); if (p) setup += Py.blockToCode(p); }
+    else if (topo.type === 'mn_sempre') loop += Py.statementToCode(topo, 'CORPO');
     else soltos.push(topo);
   }
-  const u = Cpp.usa;
-  if (u.has('led') || u.has('desenho') || u.has('texto') || u.has('preparar')) u.add('matriz');
-  if (u.has('inclinacao')) u.add('angulo');
-  if (u.has('angulo')) u.add('acel');
-
+  const u = Py.usa;
   const L = [];
-  L.push('// Programa gerado pelo mannaNAUTA Blocos');
-  L.push('// Placa: mannaNAUTA (ESP32-S3)');
+  L.push('# Programa gerado pelo mannaNAUTA Blocos');
+  L.push('# Placa: mannaNAUTA (ESP32-S3) com MicroPython');
   L.push('');
-  if (u.has('sensor')) { L.push('#include <Wire.h>'); L.push('#include <MannaNAUTA_LSM6DS.h>'); }
-  if (u.has('matriz')) L.push('#include <mannaNAUTA_WS2812.h>');
-  if (u.has('angulo')) L.push('#include <math.h>');
+  L.push('import time');
+  if (u.has('math')) L.push('import math');
+  if (u.has('random')) L.push('import random');
+  L.push('from mannanauta import *');
   L.push('');
-  if (u.has('matriz')) L.push('mannaNAUTA_WS2812 strip = mannaNAUTA_WS2812(LEDS_COUNT, LEDS_PIN, CHANNEL, TYPE_GRB);');
-  if (u.has('sensor')) L.push('MannaNAUTA_LSM6DS imu;');
+  if (u.has('matriz')) L.push('matriz = Matriz()');
+  if (u.has('sensor')) L.push('sensor = Sensor()');
+  if (u.has('passos')) L.push('sensor.ligar_passos()');
+  if (u.has('sacudida')) L.push('sensor.sensibilidade(20)');
 
   const vars = ws.getVariableMap().getAllVariables();
-  if (vars.length) { L.push(''); for (const va of vars) L.push(`float ${Cpp.nomeVar(va.getId())} = 0;`); }
+  if (vars.length) { L.push(''); for (const va of vars) L.push(`${Py.nomeVar(va.getId())} = 0`); }
 
-  const aux = [];
-  if (u.has('rgb')) aux.push(
-`uint32_t mnCorRGB(int r, int g, int b) {
-  r = constrain(r, 0, 255); g = constrain(g, 0, 255); b = constrain(b, 0, 255);
-  return ((uint32_t)r << 16) | ((uint32_t)g << 8) | (uint32_t)b;
-}`);
-  if (u.has('led')) aux.push(
-`void mnLed(int indice, uint32_t cor) {
-  if (indice >= 0 && indice < LEDS_COUNT) strip.setLedColor(indice, cor);
-}`);
-  if (u.has('preparar')) aux.push(
-`void mnPreparar(int indice, uint32_t cor) {
-  if (indice >= 0 && indice < LEDS_COUNT) strip.setLedColorData(indice, cor);
-}`);
-  if (u.has('desenho')) aux.push(
-`void mnDesenho(const char *pontos, uint32_t cor) {
-  strip.setAllLedsColorData((uint32_t)0);
-  for (int i = 0; i < 25 && pontos[i]; i++) {
-    if (pontos[i] == '1') strip.setLedColorData(i, cor);
-  }
-  strip.show();
-}`);
-  if (u.has('texto')) aux.push(
-`void mnTexto(const char *texto, uint32_t cor, float segundos) {
-  for (int i = 0; texto[i]; i++) {
-    char c = texto[i];
-    if (c >= 'a' && c <= 'z') c = c - 'a' + 'A';
-    if (c >= 'A' && c <= 'Z') strip.writeWord(c, cor);
-    else if (c >= '0' && c <= '9') strip.writeNumber(c - '0', cor);
-    else strip.clear();
-    delay((unsigned long)(segundos * 1000));
-  }
-  strip.clear();
-}`);
-  if (u.has('acel')) aux.push(
-`float mnAceleracao(char eixo) {
-  float x = 0, y = 0, z = 0;
-  imu.readAcceleration(x, y, z);
-  return eixo == 'x' ? x : (eixo == 'y' ? y : z);
-}`);
-  if (u.has('giro')) aux.push(
-`float mnGiro(char eixo) {
-  float x = 0, y = 0, z = 0;
-  imu.readGyroscope(x, y, z);
-  return eixo == 'x' ? x : (eixo == 'y' ? y : z);
-}`);
-  if (u.has('angulo')) aux.push(
-`// lados = true: inclinação para os lados; false: para frente e para trás
-float mnAngulo(bool lados) {
-  float ax = 0, ay = 0, az = 0;
-  imu.readAcceleration(ax, ay, az);
-  if (lados) return atan2(ay, az) * 180.0 / PI;
-  return atan2(-ax, sqrt(ay * ay + az * az)) * 180.0 / PI;
-}`);
-  if (u.has('inclinacao')) aux.push(
-`// 0 nivelada, 1 frente, 2 trás, 3 direita, 4 esquerda
-int mnInclinacao() {
-  const float LIMITE = 12.0;
-  float rol = mnAngulo(true), arf = mnAngulo(false);
-  if (fabs(rol) < LIMITE && fabs(arf) < LIMITE) return 0;
-  if (fabs(arf) >= fabs(rol)) return arf < 0 ? 1 : 2;
-  return rol > 0 ? 3 : 4;
-}`);
-  if (u.has('sacudida')) aux.push(
-`bool mnSacudida() {
-  return imu.shake();
-}`);
-  if (aux.length) { L.push(''); L.push(aux.join('\n\n')); }
-
-  const ini = [];
-  if (u.has('serial')) ini.push('Serial.begin(115200);');
-  if (u.has('matriz')) { ini.push('strip.begin();'); ini.push('strip.setBrightness(20);'); }
-  if (u.has('sensor')) {
-    ini.push('if (!imu.begin()) {');
-    ini.push('  imu.begin(SDA_PIN, SCL_PIN, 0x6B, &Wire);');
-    ini.push('}');
-  }
-  if (u.has('passos')) { ini.push('imu.resetPedometer();'); ini.push('imu.enablePedometer(true);'); }
-  if (u.has('sacudida')) ini.push('imu.enableWakeup(true, 0, 20);');
-
+  if (setup) { L.push(''); L.push('# quando a placa ligar'); L.push(setup.replace(/\s+$/, '')); }
   L.push('');
-  L.push('void setup() {');
-  for (const l of ini) L.push('  ' + l);
-  if (setup) L.push(setup.replace(/\s+$/, ''));
-  L.push('}');
-  L.push('');
-  L.push('void loop() {');
-  if (loop) L.push(loop.replace(/\s+$/, ''));
-  L.push('}');
+  L.push('# repetir para sempre');
+  L.push('while True:');
+  L.push(loop ? loop.replace(/\s+$/, '') : Py.INDENT + 'time.sleep_ms(100)');
   if (soltos.length) {
     L.push('');
-    L.push(`// Atenção: ${soltos.length} bloco(s) fora de "quando a placa ligar" ou "repetir para sempre" não entraram no programa.`);
+    L.push(`# Atenção: ${soltos.length} bloco(s) fora de "quando a placa ligar" ou "repetir para sempre" não entraram no programa.`);
   }
   return L.join('\n') + '\n';
 }
@@ -663,12 +583,6 @@ $('btCopiar').onclick = async () => {
   catch (e) { status('Não foi possível copiar'); }
 };
 
-// Configuração do servidor
-const urlServidor = () => (armazenar.ler('mannaBlocos.servidor', SERVIDOR_PADRAO) || '').replace(/\/+$/, '');
-$('btConfig').onclick = () => { $('urlServidor').value = urlServidor(); $('dlgConfig').showModal(); };
-$('btCancelarCfg').onclick = () => $('dlgConfig').close();
-$('btSalvarCfg').onclick = () => { armazenar.gravar('mannaBlocos.servidor', $('urlServidor').value.trim()); $('dlgConfig').close(); status('Servidor salvo'); };
-
 // Aviso quando o navegador não tem Web Serial (ou a página está dentro de um quadro)
 const temSerial = 'serial' in navigator;
 const emQuadro = (() => { try { return window.self !== window.top; } catch (e) { return true; } })();
@@ -676,100 +590,239 @@ if (!temSerial || emQuadro) {
   $('aviso').style.display = 'block';
   $('aviso').textContent = !temSerial
     ? 'Para enviar programas à placa, abra esta página no Google Chrome ou no Microsoft Edge de um computador.'
-    : 'Esta é uma prévia: aqui dá para montar os blocos e ver o código. Para enviar à placa, abra a plataforma no endereço próprio dela, no Chrome ou no Edge.';
+    : 'Esta é uma prévia: aqui dá para montar os blocos e ver o código. Para enviar à placa, abra a plataforma em franpastori.github.io/mannanauta-blocos-/ no Chrome ou no Edge.';
 }
 
-/* ---------------------- Compilar e enviar ---------------------------- */
+/* ------------------- Conexão com a placa (MicroPython) --------------- */
+// Uma única conexão serial é usada para enviar programas e para o monitor.
+const conexao = { porta: null, leitor: null, escritor: null, buffer: '', ouvintes: [] };
+const dec = new TextDecoder();
+const enc = new TextEncoder();
+const esperar = (ms) => new Promise((r) => setTimeout(r, ms));
+
+function noMonitor(texto) {
+  const m = $('monitor');
+  m.textContent = (m.textContent + texto).slice(-20000);
+  m.parentElement.scrollTop = m.parentElement.scrollHeight;
+}
+
+async function conectar(pedirPorta = true) {
+  if (conexao.porta) return conexao.porta;
+  const porta = pedirPorta ? await navigator.serial.requestPort() : conexao.ultimaPorta;
+  await porta.open({ baudRate: 115200 });
+  conexao.porta = porta; conexao.ultimaPorta = porta;
+  conexao.escritor = porta.writable.getWriter();
+  conexao.leitor = porta.readable.getReader();
+  $('btConectar').textContent = 'Desconectar';
+  status('Placa conectada');
+  (async () => {
+    try {
+      while (true) {
+        const { value, done } = await conexao.leitor.read();
+        if (done) break;
+        const t = dec.decode(value, { stream: true });
+        conexao.buffer += t;
+        if (conexao.buffer.length > 200000) conexao.buffer = conexao.buffer.slice(-100000);
+        if (!conexao.silencio) noMonitor(t);
+      }
+    } catch (e) { /* porta fechada */ }
+    await desconectar(true);
+  })();
+  return porta;
+}
+
+async function desconectar(jaFechando = false) {
+  const c = conexao;
+  if (!c.porta) return;
+  const porta = c.porta; c.porta = null;
+  try { if (!jaFechando && c.leitor) await c.leitor.cancel(); } catch (e) {}
+  try { c.leitor && c.leitor.releaseLock(); } catch (e) {}
+  try { c.escritor && c.escritor.releaseLock(); } catch (e) {}
+  try { await porta.close(); } catch (e) {}
+  c.leitor = null; c.escritor = null;
+  $('btConectar').textContent = 'Conectar placa';
+  status('Placa desconectada');
+}
+
+async function escrever(texto) {
+  const dados = typeof texto === 'string' ? enc.encode(texto) : texto;
+  // envia em pedaços pequenos para não sobrecarregar a placa
+  for (let i = 0; i < dados.length; i += 128) {
+    await conexao.escritor.write(dados.slice(i, i + 128));
+    await esperar(4);
+  }
+}
+
+// Espera até aparecer "fim" no que a placa respondeu depois da posição "desde".
+async function aguardar(fim, desde, tempo = 5000) {
+  const limite = Date.now() + tempo;
+  while (Date.now() < limite) {
+    const i = conexao.buffer.indexOf(fim, desde);
+    if (i >= 0) return i + fim.length;
+    await esperar(20);
+  }
+  throw new Error('A placa não respondeu. Confira o cabo e se o MicroPython está instalado.');
+}
+
+// Entra no modo "raw REPL" do MicroPython
+async function entrarRaw() {
+  await escrever('\r\x03\x03');
+  await esperar(150);
+  const desde = conexao.buffer.length;
+  await escrever('\x01');
+  await aguardar('raw REPL; CTRL-B to exit\r\n>', desde, 3000);
+}
+
+// Executa um trecho de código no modo raw e devolve [saída, erro]
+async function executar(codigo, tempo = 8000) {
+  const desde = conexao.buffer.length;
+  await escrever(codigo);
+  await escrever('\x04');
+  const ok = await aguardar('OK', desde, tempo);
+  const fimSaida = await aguardar('\x04', ok, tempo);
+  const fimErro = await aguardar('\x04>', fimSaida, tempo);
+  const saida = conexao.buffer.slice(ok, fimSaida - 1);
+  const erro = conexao.buffer.slice(fimSaida, fimErro - 2);
+  return [saida, erro];
+}
+
+function paraBase64(bytes) {
+  let s = '';
+  for (let i = 0; i < bytes.length; i++) s += String.fromCharCode(bytes[i]);
+  return btoa(s);
+}
+
+async function gravarArquivo(nome, conteudo) {
+  const bytes = enc.encode(conteudo);
+  let [, erro] = await executar(`import ubinascii as _b\n_f=open(${JSON.stringify(nome)},'wb')`);
+  if (erro) throw new Error(erro);
+  for (let i = 0; i < bytes.length; i += 384) {
+    [, erro] = await executar(`_f.write(_b.a2b_base64('${paraBase64(bytes.slice(i, i + 384))}'))`);
+    if (erro) throw new Error(erro);
+    progresso(Math.min(0.95, (i + 384) / bytes.length));
+  }
+  [, erro] = await executar('_f.close()');
+  if (erro) throw new Error(erro);
+}
+
+let bibliotecaTexto = null;
+async function carregarBiblioteca() {
+  if (bibliotecaTexto) return bibliotecaTexto;
+  const r = await fetch('micropython/mannanauta.py', { cache: 'no-cache' });
+  if (!r.ok) throw new Error('Não encontrei o arquivo micropython/mannanauta.py');
+  bibliotecaTexto = await r.text();
+  return bibliotecaTexto;
+}
+
+$('btConectar').onclick = async () => {
+  if (!temSerial || emQuadro) { status('Conexão indisponível aqui (veja o aviso)'); return; }
+  try {
+    if (conexao.porta) await desconectar();
+    else { await conectar(); document.querySelector('.abas button[data-aba="monitor"]').click(); }
+  } catch (e) { if (!(e && e.name === 'NotFoundError')) status('Não foi possível conectar'); }
+};
+
+$('btEnviar').onclick = async () => {
+  const bt = $('btEnviar');
+  if (!temSerial || emQuadro) { status('Envio indisponível aqui (veja o aviso)'); return; }
+  bt.disabled = true; progresso(0.03);
+  try {
+    await conectar();
+    conexao.silencio = true;
+    status('Preparando a placa…');
+    await entrarRaw();
+    // Confere se a biblioteca mannanauta.py já está na placa e atualizada
+    const lib = await carregarBiblioteca();
+    const versao = (lib.match(/^VERSAO = "([^"]+)"/m) || [])[1] || '?';
+    const [saida] = await executar(
+      `try:\n import os\n f=open('mannanauta.py')\n l=f.readline()\n while l and not l.startswith('VERSAO'):\n  l=f.readline()\n f.close()\n print(l.strip())\nexcept Exception:\n print('nada')`);
+    if (!saida.includes(`VERSAO = "${versao}"`)) {
+      status('Instalando a biblioteca mannanauta na placa…');
+      await gravarArquivo('mannanauta.py', lib);
+    }
+    status('Enviando o programa…');
+    await gravarArquivo('main.py', codigoAtual);
+    progresso(1);
+    // Sai do modo raw e reinicia: o main.py começa a rodar
+    await escrever('\x02');
+    await esperar(100);
+    conexao.silencio = false;
+    noMonitor('\n--- programa enviado, reiniciando a placa ---\n');
+    await escrever('\x04');
+    status('Programa enviado! ✔');
+    document.querySelector('.abas button[data-aba="monitor"]').click();
+    setTimeout(() => progresso(0), 1500);
+  } catch (e) {
+    conexao.silencio = false;
+    progresso(0);
+    if (e && e.name === 'NotFoundError') status('Nenhuma porta escolhida');
+    else { status('Falha no envio'); mostrarErro((e && e.message) || String(e)); }
+    try { if (conexao.porta) await escrever('\x02'); } catch (e2) {}
+  } finally { bt.disabled = false; }
+};
+
+$('btParar').onclick = async () => {
+  if (!conexao.porta) { status('Conecte a placa primeiro'); return; }
+  await escrever('\x03');
+  status('Programa parado');
+};
+
+function mostrarErro(texto) {
+  document.querySelector('.abas button[data-aba="monitor"]').click();
+  noMonitor('\n⚠ ' + texto + '\n');
+}
+$('btLimparMonitor').onclick = () => { $('monitor').textContent = ''; };
+
+/* ------------------ Instalar o MicroPython na placa ------------------ */
 let esptool = null;
 async function carregarEsptool() {
   if (!esptool) esptool = await import('https://unpkg.com/esptool-js@0.7.1/bundle.js');
   return esptool;
 }
-const base64ParaBytes = (b64) => Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
 
-let portaMonitor = null, leitorMonitor = null;
-async function fecharMonitor() {
-  try { if (leitorMonitor) { await leitorMonitor.cancel(); leitorMonitor.releaseLock(); } } catch (e) {}
-  try { if (portaMonitor) await portaMonitor.close(); } catch (e) {}
-  leitorMonitor = null; portaMonitor = null;
-  $('btMonitor').textContent = 'Conectar monitor';
-}
-
-$('btEnviar').onclick = async () => {
-  const bt = $('btEnviar');
-  if (!temSerial || emQuadro) { status('Envio indisponível aqui (veja o aviso)'); return; }
-  const servidor = urlServidor();
-  if (!servidor) { $('btConfig').click(); status('Informe o servidor de compilação'); return; }
-  bt.disabled = true; progresso(0.05);
+$('btInstalar').onclick = () => $('dlgInstalar').showModal();
+$('btCancelarInst').onclick = () => $('dlgInstalar').close();
+$('btConfirmarInst').onclick = async () => {
+  $('dlgInstalar').close();
+  if (!temSerial || emQuadro) { status('Instalação indisponível aqui (veja o aviso)'); return; }
+  const bt = $('btInstalar');
+  bt.disabled = true; $('btEnviar').disabled = true;
   let transporte = null;
   try {
-    await fecharMonitor();
-    // 1. Pede a porta antes de compilar (o Chrome exige que seja logo após o clique)
+    await desconectar();
     const porta = await navigator.serial.requestPort();
-    // 2. Compila no servidor
-    status('Compilando… (pode levar até 1 minuto)');
-    const resp = await fetch(servidor + '/compilar', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ codigo: codigoAtual })
-    });
-    const res = await resp.json().catch(() => ({ ok: false, erro: 'Resposta inválida do servidor' }));
-    if (!res.ok) { status('Erro ao compilar'); mostrarErro(res.erro || 'Erro desconhecido'); return; }
-    progresso(0.3);
-    // 3. Grava na placa
-    status('Conectando à placa…');
+    status('Conectando à placa…'); progresso(0.02);
     const { ESPLoader, Transport } = await carregarEsptool();
     transporte = new Transport(porta, false);
     const terminal = { clean() {}, writeLine(t) { console.log(t); }, write(t) {} };
-    const carregador = new ESPLoader({ transport: transporte, baudrate: 921600, terminal, romBaudrate: 115200 });
-    await carregador.main();
-    status('Gravando…');
-    const partes = res.partes.map((p) => {
-      const bytes = base64ParaBytes(p.dados);
-      return { address: p.endereco, data: bytes };
-    });
+    const carregador = new ESPLoader({ transport: transporte, baudrate: 460800, terminal, romBaudrate: 115200 });
+    const chip = await carregador.main();
+    if (!/ESP32-S3/i.test(chip)) throw new Error('Esta placa não parece ser um ESP32-S3 (' + chip + ').');
+    let tamanho = '';
+    try { tamanho = (await carregador.detectFlashSize()) || ''; } catch (e) {}
+    const arquivo = /^(2|4)MB/.test(tamanho) ? 'firmware/ESP32_GENERIC_S3-FLASH_4M.bin' : 'firmware/ESP32_GENERIC_S3.bin';
+    status('Baixando o MicroPython…');
+    const r = await fetch(arquivo, { cache: 'no-cache' });
+    if (!r.ok) throw new Error('Não encontrei o arquivo ' + arquivo);
+    const dados = new Uint8Array(await r.arrayBuffer());
+    status('Gravando o MicroPython (cerca de 1 minuto)…');
     await carregador.writeFlash({
-      fileArray: partes, flashSize: 'keep', flashMode: 'keep', flashFreq: 'keep', eraseAll: false, compress: true,
-      reportProgress: (i, escrito, total) => progresso(0.3 + 0.7 * ((i + escrito / total) / partes.length))
+      fileArray: [{ address: 0x0, data: dados }], flashSize: 'keep', flashMode: 'keep', flashFreq: 'keep',
+      eraseAll: true, compress: true,
+      reportProgress: (i, escrito, total) => progresso(0.05 + 0.95 * escrito / total)
     });
-    try { await carregador.after('hard_reset'); } catch (e) { try { await carregador.hardReset(); } catch (e2) {} }
-    status('Programa enviado! ✔');
-    progresso(1); setTimeout(() => progresso(0), 1500);
+    try { await carregador.after('hard_reset'); } catch (e) {}
+    status('MicroPython instalado! ✔ Agora clique em "Enviar para a placa".');
+    progresso(1); setTimeout(() => progresso(0), 2000);
   } catch (e) {
+    progresso(0);
     if (e && e.name === 'NotFoundError') status('Nenhuma porta escolhida');
-    else { status('Falha no envio'); mostrarErro((e && e.message) || String(e)); }
+    else { status('Falha na instalação'); mostrarErro(((e && e.message) || String(e)) + '\nDica: segure o botão BOOT, aperte e solte RESET, solte o BOOT e tente de novo.'); }
   } finally {
     try { if (transporte) await transporte.disconnect(); } catch (e) {}
-    bt.disabled = false;
+    bt.disabled = false; $('btEnviar').disabled = false;
   }
 };
-
-function mostrarErro(texto) {
-  document.querySelector('.abas button[data-aba="monitor"]').click();
-  $('monitor').textContent += '\n⚠ ' + texto + '\n';
-}
-
-/* ---------------------------- Monitor serial ------------------------- */
-$('btMonitor').onclick = async () => {
-  if (portaMonitor) { await fecharMonitor(); return; }
-  if (!temSerial || emQuadro) { status('Monitor indisponível aqui (veja o aviso)'); return; }
-  try {
-    portaMonitor = await navigator.serial.requestPort();
-    await portaMonitor.open({ baudRate: 115200 });
-    $('btMonitor').textContent = 'Desconectar monitor';
-    document.querySelector('.abas button[data-aba="monitor"]').click();
-    const dec = new TextDecoder();
-    leitorMonitor = portaMonitor.readable.getReader();
-    while (true) {
-      const { value, done } = await leitorMonitor.read();
-      if (done) break;
-      const m = $('monitor');
-      m.textContent = (m.textContent + dec.decode(value)).slice(-20000);
-      m.parentElement.scrollTop = m.parentElement.scrollHeight;
-    }
-  } catch (e) {
-    if (!(e && e.name === 'NotFoundError')) status('Monitor desconectado');
-  } finally { await fecharMonitor(); }
-};
-$('btLimparMonitor').onclick = () => { $('monitor').textContent = ''; };
 </script>
 </body>
 </html>

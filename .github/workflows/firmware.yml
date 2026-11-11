@@ -1,0 +1,53 @@
+# Baixa o firmware oficial do MicroPython para ESP32-S3 (micropython.org)
+# e guarda na pasta firmware/, para o editor instalar pelo navegador.
+name: Atualizar firmware MicroPython
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - .github/workflows/firmware.yml
+
+permissions:
+  contents: write
+
+jobs:
+  baixar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Baixar a versão estável mais recente
+        run: |
+          set -e
+          mkdir -p firmware
+          baixar () {
+            placa="$1"; saida="$2"
+            pagina=$(curl -fsSL "https://micropython.org/download/${placa}/")
+            arquivo=$(echo "$pagina" | grep -oE "/resources/firmware/${placa}-[0-9]{8}-v[0-9]+\.[0-9]+\.[0-9]+\.bin" | head -n 1)
+            if [ -z "$arquivo" ]; then echo "Não achei o firmware de ${placa}"; exit 1; fi
+            echo "${placa}: ${arquivo}"
+            curl -fsSL -o "firmware/${saida}" "https://micropython.org${arquivo}"
+            echo "${saida} <- https://micropython.org${arquivo}" >> firmware/VERSAO.txt
+          }
+          : > firmware/VERSAO.txt
+          baixar ESP32_GENERIC_S3 ESP32_GENERIC_S3.bin
+          # variante para placas com 4 MB de memória flash
+          pagina=$(curl -fsSL "https://micropython.org/download/ESP32_GENERIC_S3/")
+          arquivo=$(echo "$pagina" | grep -oE "/resources/firmware/ESP32_GENERIC_S3-FLASH_4M-[0-9]{8}-v[0-9]+\.[0-9]+\.[0-9]+\.bin" | head -n 1)
+          if [ -n "$arquivo" ]; then
+            curl -fsSL -o firmware/ESP32_GENERIC_S3-FLASH_4M.bin "https://micropython.org${arquivo}"
+            echo "ESP32_GENERIC_S3-FLASH_4M.bin <- https://micropython.org${arquivo}" >> firmware/VERSAO.txt
+          else
+            cp firmware/ESP32_GENERIC_S3.bin firmware/ESP32_GENERIC_S3-FLASH_4M.bin
+            echo "ESP32_GENERIC_S3-FLASH_4M.bin: variante não encontrada, cópia do padrão" >> firmware/VERSAO.txt
+          fi
+          ls -la firmware
+          cat firmware/VERSAO.txt
+
+      - name: Salvar no repositório
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add firmware
+          git diff --cached --quiet && echo "Nada mudou" || (git commit -m "Firmware MicroPython atualizado" && git push)
