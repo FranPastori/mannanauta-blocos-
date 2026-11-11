@@ -160,6 +160,13 @@ f['mn_faixa_giro'] = (b) => { sensor(); return `sensor.faixa_giroscopio(${b.getF
 f['mn_conectado'] = () => { sensor(); return ['sensor.conectado', Py.ORDER_ATOMIC]; };
 f['mn_nome_sensor'] = () => { sensor(); return ['sensor.nome()', Py.ORDER_ATOMIC]; };
 
+// Pinos e internet
+f['mn_analogico'] = (b) => [`leitura_analogica(${b.getFieldValue('PINO')})`, Py.ORDER_ATOMIC];
+f['mn_wifi'] = (b) => `wifi_conectar(${JSON.stringify(b.getFieldValue('REDE'))}, ${JSON.stringify(b.getFieldValue('SENHA'))})\n`;
+f['mn_wifi_ok'] = () => ['wifi_conectado()', Py.ORDER_ATOMIC];
+f['mn_blynk'] = (b) => `blynk_conectar(${JSON.stringify((b.getFieldValue('TOKEN') || '').trim())})\n`;
+f['mn_blynk_enviar'] = (b) => `blynk_enviar("${b.getFieldValue('PINO')}", ${v(b,'V')})\n`;
+
 // Monitor serial
 f['mn_escrever'] = (b) => `print(${v(b,'V',Py.ORDER_NONE,'""')})\n`;
 f['mn_escrever_dois'] = (b) => `print(${v(b,'A',Py.ORDER_NONE,'""')}, ${v(b,'B',Py.ORDER_NONE,'""')})\n`;

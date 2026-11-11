@@ -2,9 +2,10 @@
 # Versão em MicroPython das bibliotecas livres de wuigor (licença MIT):
 #   mannaNAUTA_WS2812_Lib  -> classe Matriz (matriz 5x5 de LEDs WS2812, pino 47)
 #   mannaNAUTA_LSM6DS_Lib  -> classe Sensor (acelerômetro/giroscópio LSM6DS, SDA 5 / SCL 4)
+# Também traz: leitura analógica, Wi-Fi e envio de dados para o Blynk.
 # Os desenhos de letras, números, símbolos e carinhas são os mesmos da biblioteca original.
 
-VERSAO = "1"
+VERSAO = "2"
 
 import math
 import time
@@ -329,3 +330,97 @@ class Sensor:
     def passos(self):
         d = self._reg(_STEP_COUNTER_L, 2)
         return d[0] | (d[1] << 8)
+
+
+# ------------------------------------------------- Leitura analógica
+# Valor de 0 a 4095 (como o analogRead do Arduino). Pinos que funcionam junto com o Wi-Fi: 1, 2, 3, 6, 7, 8, 9, 10.
+_adcs = {}
+
+
+def leitura_analogica(pino):
+    from machine import ADC
+    pino = int(pino)
+    adc = _adcs.get(pino)
+    if adc is None:
+        adc = ADC(Pin(pino))
+        try:
+            adc.atten(ADC.ATTN_11DB)  # faixa de 0 a 3,3 V
+        except Exception:
+            pass
+        _adcs[pino] = adc
+    total = 0
+    for _ in range(8):
+        total += adc.read_u16() >> 4
+    return total // 8
+
+
+# ------------------------------------------------- Wi-Fi
+_wlan = None
+
+
+def wifi_conectar(rede, senha, segundos=20):
+    global _wlan
+    import network
+    _wlan = network.WLAN(network.STA_IF)
+    _wlan.active(True)
+    if not _wlan.isconnected():
+        print("Conectando ao Wi-Fi", rede, "...")
+        _wlan.connect(rede, senha)
+        limite = time.ticks_add(time.ticks_ms(), int(segundos * 1000))
+        while not _wlan.isconnected() and time.ticks_diff(limite, time.ticks_ms()) > 0:
+            time.sleep_ms(250)
+    if _wlan.isconnected():
+        print("Wi-Fi conectado:", _wlan.ifconfig()[0])
+        return True
+    print("Não consegui conectar ao Wi-Fi. Confira o nome da rede e a senha.")
+    return False
+
+
+def wifi_conectado():
+    return _wlan is not None and _wlan.isconnected()
+
+
+# ------------------------------------------------- Blynk (Blynk.Cloud, HTTPS API)
+_blynk_token = None
+_blynk_servidor = "blynk.cloud"
+
+
+def blynk_conectar(token, servidor="blynk.cloud"):
+    global _blynk_token, _blynk_servidor
+    _blynk_token = str(token).strip()
+    _blynk_servidor = (str(servidor).strip() or "blynk.cloud").replace("https://", "").replace("http://", "").strip("/")
+
+
+def _url(texto):
+    seguro = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_.~"
+    saida = ""
+    for b in str(texto).encode():
+        c = chr(b)
+        saida += c if c in seguro else "%%%02X" % b
+    return saida
+
+
+def blynk_enviar(pino, valor):
+    if not _blynk_token:
+        print("Use o bloco 'conectar ao Blynk' antes de enviar.")
+        return False
+    if not wifi_conectado():
+        print("Sem Wi-Fi: use o bloco 'conectar ao Wi-Fi' antes de enviar.")
+        return False
+    try:
+        import requests
+    except ImportError:
+        import urequests as requests
+    if isinstance(valor, float):
+        valor = round(valor, 2)
+    url = "https://%s/external/api/update?token=%s&%s=%s" % (_blynk_servidor, _url(_blynk_token), pino, _url(valor))
+    try:
+        r = requests.get(url)
+        ok = r.status_code == 200
+        if not ok:
+            print("Blynk respondeu", r.status_code, r.text)
+        r.close()
+        return ok
+    except Exception as e:
+        print("Erro ao enviar para o Blynk:", e)
+        return False

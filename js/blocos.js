@@ -13,7 +13,7 @@ const armazenar = {
 };
 
 /* ---------------------------- Cores ---------------------------------- */
-const COR = { evento:'#FFBF00', controle:'#FFAB19', matriz:'#9966FF', cor:'#CF63CF', sensor:'#4CBF56', serial:'#0FBD8C', matematica:'#59C059', logica:'#5CB1D6', variavel:'#FF8C1A' };
+const COR = { evento:'#FFBF00', controle:'#FFAB19', matriz:'#9966FF', cor:'#CF63CF', sensor:'#4CBF56', serial:'#0FBD8C', matematica:'#59C059', logica:'#5CB1D6', variavel:'#FF8C1A', pinos:'#5C68A6', internet:'#1CA8DD' };
 
 const CORES_NOMEADAS = [
   ['🔴 vermelho', '0xFF0000'], ['🟢 verde', '0x00FF00'], ['🔵 azul', '0x0000FF'],
@@ -71,6 +71,15 @@ Blockly.defineBlocksWithJsonArray([
   { type:'mn_temperatura', message0:'temperatura (°C)', output:'Number', colour:COR.sensor },
   { type:'mn_passos', message0:'número de passos', output:'Number', colour:COR.sensor, tooltip:'Conta passos quando a placa vai junto com quem anda.' },
   { type:'mn_zerar_passos', message0:'zerar contador de passos', previousStatement:null, nextStatement:null, colour:COR.sensor },
+
+  // Pinos
+  { type:'mn_analogico', message0:'leitura analógica no pino %1', args0:[{type:'field_dropdown',name:'PINO',options:[['1','1'],['2','2'],['3','3'],['6','6'],['7','7'],['8','8'],['9','9'],['10','10']]}], output:'Number', colour:COR.pinos, tooltip:'Valor de 0 a 4095 (0 a 3,3 V). Ex.: sensor de umidade do solo.' },
+
+  // Internet (IoT)
+  { type:'mn_wifi', message0:'conectar ao Wi-Fi rede %1 senha %2', args0:[{type:'field_input',name:'REDE',text:'nome da rede'},{type:'field_input',name:'SENHA',text:'senha'}], previousStatement:null, nextStatement:null, colour:COR.internet, tooltip:'Use no "quando a placa ligar". Redes com página de login não funcionam.' },
+  { type:'mn_wifi_ok', message0:'Wi-Fi conectado?', output:'Boolean', colour:COR.internet },
+  { type:'mn_blynk', message0:'conectar ao Blynk com o código %1', args0:[{type:'field_input',name:'TOKEN',text:'código da placa'}], previousStatement:null, nextStatement:null, colour:COR.internet, tooltip:'Cole o código (Auth Token) desta placa, criado no Blynk.' },
+  { type:'mn_blynk_enviar', message0:'enviar %1 para o Blynk no pino %2', args0:[{type:'input_value',name:'V'},{type:'field_dropdown',name:'PINO',options:[['V0','V0'],['V1','V1'],['V2','V2'],['V3','V3'],['V4','V4'],['V5','V5'],['V6','V6'],['V7','V7'],['V8','V8'],['V9','V9']]}], previousStatement:null, nextStatement:null, colour:COR.internet, inputsInline:true, tooltip:'Envia um valor para o painel do Blynk. Espere alguns segundos entre um envio e outro.' },
 
   // Monitor serial
   { type:'mn_escrever', message0:'escrever no monitor %1', args0:[{type:'input_value',name:'V'}], previousStatement:null, nextStatement:null, colour:COR.serial, inputsInline:true },

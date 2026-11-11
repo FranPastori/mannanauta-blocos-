@@ -52,6 +52,15 @@ const toolbox = {
       {kind:'block',type:'mn_conectado'},
       {kind:'block',type:'mn_nome_sensor'}
     ]},
+    { kind:'category', name:'Pinos', colour:COR.pinos, contents:[
+      {kind:'block',type:'mn_analogico'}
+    ]},
+    { kind:'category', name:'Internet (IoT)', colour:COR.internet, contents:[
+      {kind:'block',type:'mn_wifi'},
+      {kind:'block',type:'mn_blynk'},
+      {kind:'block',type:'mn_blynk_enviar',inputs:{V:{block:{type:'mn_analogico'}}}},
+      {kind:'block',type:'mn_wifi_ok'}
+    ]},
     { kind:'category', name:'Monitor serial', colour:COR.serial, contents:[
       {kind:'block',type:'mn_escrever',inputs:{V:{shadow:{type:'text',fields:{TEXT:'Olá!'}}}}},
       {kind:'block',type:'mn_escrever_dois',inputs:{A:{shadow:{type:'text',fields:{TEXT:'valor:'}}},B:sombraNum(0)}},
