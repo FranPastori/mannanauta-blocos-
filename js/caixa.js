@@ -58,13 +58,17 @@ const toolbox = {
     { kind:'category', name:'Internet (IoT)', colour:COR.internet, contents:[
       {kind:'block',type:'mn_wifi'},
       {kind:'block',type:'mn_blynk'},
-      {kind:'block',type:'mn_blynk_enviar',inputs:{V:{block:{type:'mn_analogico'}}}},
+      {kind:'block',type:'mn_blynk_enviar',inputs:{V:{block:{type:'mn_limitar',
+        inputs:{V:{block:{type:'mn_mapear',inputs:{V:{block:{type:'mn_analogico'}},A:sombraNum(3000),B:sombraNum(1300),C:sombraNum(0),D:sombraNum(100)}}},
+                A:sombraNum(0),B:sombraNum(100)}}}}},
       {kind:'block',type:'mn_wifi_ok'}
     ]},
     { kind:'category', name:'Página web', colour:COR.pagina, contents:[
       {kind:'block',type:'mn_wifi_criar'},
       {kind:'block',type:'mn_pagina_iniciar'},
-      {kind:'block',type:'mn_pagina_mostrar',inputs:{V:{block:{type:'mn_analogico'}}}},
+      {kind:'block',type:'mn_pagina_mostrar',fields:{NOME:'Umidade (%)'},inputs:{V:{block:{type:'mn_limitar',
+        inputs:{V:{block:{type:'mn_mapear',inputs:{V:{block:{type:'mn_analogico'}},A:sombraNum(3000),B:sombraNum(1300),C:sombraNum(0),D:sombraNum(100)}}},
+                A:sombraNum(0),B:sombraNum(100)}}}}},
       {kind:'block',type:'mn_escrever',inputs:{V:{block:{type:'mn_endereco'}}}}
     ]},
     { kind:'category', name:'Monitor serial', colour:COR.serial, contents:[
@@ -76,6 +80,8 @@ const toolbox = {
       {kind:'block',type:'math_number'},
       {kind:'block',type:'math_arithmetic',inputs:{A:sombraNum(1),B:sombraNum(1)}},
       {kind:'block',type:'math_random_int',inputs:{FROM:sombraNum(1),TO:sombraNum(10)}},
+      {kind:'block',type:'mn_mapear',inputs:{V:sombraNum(2000),A:sombraNum(0),B:sombraNum(4095),C:sombraNum(0),D:sombraNum(100)}},
+      {kind:'block',type:'mn_limitar',inputs:{V:sombraNum(120),A:sombraNum(0),B:sombraNum(100)}},
       {kind:'block',type:'math_modulo',inputs:{DIVIDEND:sombraNum(10),DIVISOR:sombraNum(3)}},
       {kind:'block',type:'math_round',inputs:{NUM:sombraNum(3.7)}},
       {kind:'block',type:'math_single',inputs:{NUM:sombraNum(9)}},

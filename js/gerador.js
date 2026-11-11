@@ -4,7 +4,7 @@ Py.ORDER_ATOMIC = 0; Py.ORDER_EXP = 3; Py.ORDER_UNARY = 4; Py.ORDER_MULT = 5; Py
 Py.ORDER_REL = 11; Py.ORDER_NOT = 12; Py.ORDER_AND = 13; Py.ORDER_OR = 14; Py.ORDER_NONE = 99;
 Py.INDENT = '    ';
 Py.addReservedWords('False,None,True,and,as,assert,break,class,continue,def,del,elif,else,except,finally,for,from,global,if,import,in,is,lambda,nonlocal,not,or,pass,raise,return,try,while,with,yield,' +
-  'time,math,random,print,int,float,str,range,abs,round,matriz,sensor,Matriz,Sensor,contar,cor_rgb,cor_arco,cor_hsv,mannanauta');
+  'time,math,random,print,int,float,str,range,abs,round,matriz,sensor,Matriz,Sensor,contar,mapear,limitar,cor_rgb,cor_arco,cor_hsv,mannanauta');
 
 Py.init = function (ws) {
   Object.getPrototypeOf(this).init.call(this, ws);
@@ -159,6 +159,10 @@ f['mn_faixa_acel'] = (b) => { sensor(); return `sensor.faixa_acelerometro(${b.ge
 f['mn_faixa_giro'] = (b) => { sensor(); return `sensor.faixa_giroscopio(${b.getFieldValue('F')})\n`; };
 f['mn_conectado'] = () => { sensor(); return ['sensor.conectado', Py.ORDER_ATOMIC]; };
 f['mn_nome_sensor'] = () => { sensor(); return ['sensor.nome()', Py.ORDER_ATOMIC]; };
+
+// Operadores extras
+f['mn_mapear'] = (b) => [`mapear(${v(b,'V')}, ${v(b,'A')}, ${v(b,'B')}, ${v(b,'C')}, ${v(b,'D')})`, Py.ORDER_ATOMIC];
+f['mn_limitar'] = (b) => [`limitar(${v(b,'V')}, ${v(b,'A')}, ${v(b,'B')})`, Py.ORDER_ATOMIC];
 
 // Pinos e internet
 f['mn_analogico'] = (b) => [`leitura_analogica(${b.getFieldValue('PINO')})`, Py.ORDER_ATOMIC];

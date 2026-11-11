@@ -5,7 +5,7 @@
 # Também traz: leitura analógica, Wi-Fi, envio de dados para o Blynk e uma página web própria da placa.
 # Os desenhos de letras, números, símbolos e carinhas são os mesmos da biblioteca original.
 
-VERSAO = "3"
+VERSAO = "4"
 
 import math
 import time
@@ -22,6 +22,18 @@ EMOCOES={'=]': 33063242, '=[': 18841930, '=O': 15251466, '=o': 15251466, '=s': 1
 def _limitar(v, a, b):
     v = int(v)
     return a if v < a else (b if v > b else v)
+
+
+def mapear(valor, de_min, de_max, para_min, para_max):
+    # Igual ao map() do Arduino: converte um valor de uma faixa para outra (resultado inteiro)
+    if de_max == de_min:
+        return int(para_min)
+    return int((valor - de_min) * (para_max - para_min) / (de_max - de_min) + para_min)
+
+
+def limitar(valor, minimo, maximo):
+    # Igual ao constrain() do Arduino
+    return minimo if valor < minimo else (maximo if valor > maximo else valor)
 
 
 def contar(de, ate, passo=1):

@@ -72,6 +72,10 @@ Blockly.defineBlocksWithJsonArray([
   { type:'mn_passos', message0:'número de passos', output:'Number', colour:COR.sensor, tooltip:'Conta passos quando a placa vai junto com quem anda.' },
   { type:'mn_zerar_passos', message0:'zerar contador de passos', previousStatement:null, nextStatement:null, colour:COR.sensor },
 
+  // Operadores extras (como no Arduino)
+  { type:'mn_mapear', message0:'converter %1 de %2 a %3 para %4 a %5', args0:[{type:'input_value',name:'V',check:'Number'},{type:'input_value',name:'A',check:'Number'},{type:'input_value',name:'B',check:'Number'},{type:'input_value',name:'C',check:'Number'},{type:'input_value',name:'D',check:'Number'}], output:'Number', colour:COR.matematica, inputsInline:true, tooltip:'Igual ao map() do Arduino. Ex.: converter a leitura de 3000 (seco) a 1300 (molhado) para 0 a 100 (%).' },
+  { type:'mn_limitar', message0:'limitar %1 entre %2 e %3', args0:[{type:'input_value',name:'V',check:'Number'},{type:'input_value',name:'A',check:'Number'},{type:'input_value',name:'B',check:'Number'}], output:'Number', colour:COR.matematica, inputsInline:true, tooltip:'Igual ao constrain() do Arduino: o valor nunca passa do mínimo nem do máximo.' },
+
   // Pinos
   { type:'mn_analogico', message0:'leitura analógica no pino %1', args0:[{type:'field_dropdown',name:'PINO',options:[['1','1'],['2','2'],['3','3'],['6','6'],['7','7'],['8','8'],['9','9'],['10','10']]}], output:'Number', colour:COR.pinos, tooltip:'Valor de 0 a 4095 (0 a 3,3 V). Ex.: sensor de umidade do solo.' },
 
