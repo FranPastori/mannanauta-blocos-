@@ -103,9 +103,9 @@
 
 <dialog id="dlgInstalar">
   <h2>Instalar o MicroPython</h2>
-  <p style="font-size:14px">Faça isso só na primeira vez que usar a placa (ou se ela parar de responder). Tudo o que estiver gravado na placa será apagado.</p>
-  <p style="font-size:14px">Ligue a placa no cabo USB e escolha a porta dela na próxima janela. Se não funcionar, segure o botão <b>BOOT</b>, aperte e solte <b>RESET</b>, solte o <b>BOOT</b> e tente de novo.</p>
-  <div class="acoes"><button id="btCancelarInst">Cancelar</button><button id="btConfirmarInst" class="principal">Instalar</button></div>
+  <p id="txtInstalar" style="font-size:14px">Faça isso só se a placa for nova ou parar de responder. Tudo o que estiver gravado nela será apagado.</p>
+  <p style="font-size:14px">Se a instalação não começar, segure o botão <b>BOOT</b>, aperte e solte <b>RESET</b>, solte o <b>BOOT</b> e tente de novo.</p>
+  <div class="acoes"><button id="btCancelarInst">Cancelar</button><button id="btConfirmarInst" class="principal">Instalar agora</button></div>
 </dialog>
 
 <script>
@@ -606,9 +606,9 @@ function noMonitor(texto) {
   m.parentElement.scrollTop = m.parentElement.scrollHeight;
 }
 
-async function conectar(pedirPorta = true) {
+async function conectar(portaConhecida = null) {
   if (conexao.porta) return conexao.porta;
-  const porta = pedirPorta ? await navigator.serial.requestPort() : conexao.ultimaPorta;
+  const porta = portaConhecida || await navigator.serial.requestPort();
   await porta.open({ baudRate: 115200 });
   conexao.porta = porta; conexao.ultimaPorta = porta;
   conexao.escritor = porta.writable.getWriter();
@@ -714,11 +714,69 @@ async function carregarBiblioteca() {
   return bibliotecaTexto;
 }
 
+// Confere se a placa responde como MicroPython (sem mexer no programa dela).
+async function temMicroPython() {
+  conexao.silencio = true;
+  try {
+    await escrever('\r\x03\x03');
+    await esperar(200);
+    const desde = conexao.buffer.length;
+    await escrever('\x01');
+    await aguardar('raw REPL; CTRL-B to exit', desde, 2500);
+    // volta ao normal e reinicia, para o programa da placa continuar rodando
+    await escrever('\x02');
+    await esperar(100);
+    await escrever('\x04');
+    return true;
+  } catch (e) {
+    return false;
+  } finally { conexao.silencio = false; }
+}
+
+let verificando = false;
+// Chamado sempre que a placa é conectada: se não tiver MicroPython, oferece a instalação.
+async function aoConectar(automatico) {
+  if (verificando) return;
+  verificando = true;
+  try {
+    status('Verificando a placa…');
+    if (await temMicroPython()) {
+      status(automatico ? 'Placa conectada automaticamente ✔' : 'Placa conectada ✔');
+    } else {
+      status('Esta placa ainda não tem o MicroPython');
+      pedirInstalacao(true);
+    }
+  } finally { verificando = false; }
+}
+
+function pedirInstalacao(semMicroPython) {
+  $('txtInstalar').textContent = semMicroPython
+    ? 'Esta placa ainda não tem o MicroPython, que é necessário para receber os programas. Instalar agora? Leva cerca de 1 minuto e apaga o que estiver gravado na placa.'
+    : 'Faça isso só se a placa for nova ou parar de responder. Tudo o que estiver gravado nela será apagado.';
+  if (!$('dlgInstalar').open) $('dlgInstalar').showModal();
+}
+
+// Conexão automática: quando uma placa já usada antes neste computador é ligada no cabo.
+async function conectarAutomatico() {
+  if (!temSerial || emQuadro || conexao.porta || instalando) return;
+  try {
+    const portas = await navigator.serial.getPorts();
+    if (portas.length !== 1) return;
+    await conectar(portas[0]);
+    await aoConectar(true);
+  } catch (e) { /* placa ocupada ou desligada: segue sem conectar */ }
+}
+if (temSerial && !emQuadro) {
+  navigator.serial.addEventListener('connect', () => setTimeout(conectarAutomatico, 800));
+  navigator.serial.addEventListener('disconnect', (e) => { if (conexao.porta && e.target === conexao.porta) desconectar(true); });
+  setTimeout(conectarAutomatico, 500);
+}
+
 $('btConectar').onclick = async () => {
   if (!temSerial || emQuadro) { status('Conexão indisponível aqui (veja o aviso)'); return; }
   try {
     if (conexao.porta) await desconectar();
-    else { await conectar(); document.querySelector('.abas button[data-aba="monitor"]').click(); }
+    else { await conectar(); document.querySelector('.abas button[data-aba="monitor"]').click(); await aoConectar(false); }
   } catch (e) { if (!(e && e.name === 'NotFoundError')) status('Não foi possível conectar'); }
 };
 
@@ -730,7 +788,13 @@ $('btEnviar').onclick = async () => {
     await conectar();
     conexao.silencio = true;
     status('Preparando a placa…');
-    await entrarRaw();
+    try { await entrarRaw(); }
+    catch (e) {
+      conexao.silencio = false; progresso(0);
+      status('Esta placa ainda não tem o MicroPython');
+      pedirInstalacao(true);
+      return;
+    }
     // Confere se a biblioteca mannanauta.py já está na placa e atualizada
     const lib = await carregarBiblioteca();
     const versao = (lib.match(/^VERSAO = "([^"]+)"/m) || [])[1] || '?';
@@ -780,7 +844,8 @@ async function carregarEsptool() {
   return esptool;
 }
 
-$('btInstalar').onclick = () => $('dlgInstalar').showModal();
+let instalando = false;
+$('btInstalar').onclick = () => pedirInstalacao(false);
 $('btCancelarInst').onclick = () => $('dlgInstalar').close();
 $('btConfirmarInst').onclick = async () => {
   $('dlgInstalar').close();
@@ -788,9 +853,11 @@ $('btConfirmarInst').onclick = async () => {
   const bt = $('btInstalar');
   bt.disabled = true; $('btEnviar').disabled = true;
   let transporte = null;
+  instalando = true;
   try {
+    const conhecida = conexao.porta || null;
     await desconectar();
-    const porta = await navigator.serial.requestPort();
+    const porta = conhecida || await navigator.serial.requestPort();
     status('Conectando à placa…'); progresso(0.02);
     const { ESPLoader, Transport } = await carregarEsptool();
     transporte = new Transport(porta, false);
@@ -812,7 +879,12 @@ $('btConfirmarInst').onclick = async () => {
       reportProgress: (i, escrito, total) => progresso(0.05 + 0.95 * escrito / total)
     });
     try { await carregador.after('hard_reset'); } catch (e) {}
-    status('MicroPython instalado! ✔ Agora clique em "Enviar para a placa".');
+    status('MicroPython instalado! ✔ Reconectando…');
+    setTimeout(async () => {
+      instalando = false;
+      await conectarAutomatico();
+      if (!conexao.porta) status('MicroPython instalado! ✔ Clique em "Conectar placa" e escolha a porta de novo.');
+    }, 3000);
     progresso(1); setTimeout(() => progresso(0), 2000);
   } catch (e) {
     progresso(0);
@@ -821,6 +893,7 @@ $('btConfirmarInst').onclick = async () => {
   } finally {
     try { if (transporte) await transporte.disconnect(); } catch (e) {}
     bt.disabled = false; $('btEnviar').disabled = false;
+    setTimeout(() => { instalando = false; }, 3500);
   }
 };
 </script>

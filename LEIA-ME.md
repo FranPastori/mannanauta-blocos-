@@ -8,8 +8,9 @@ Endereço: https://franpastori.github.io/mannanauta-blocos-/
 
 ## Como usar
 
-1. Ligue a placa no USB.
-2. **Só na primeira vez:** clique em **Instalar MicroPython** e escolha a porta da placa.
+1. Ligue a placa no USB e clique em **Conectar placa** (só na primeira vez em cada computador; depois o app
+   conecta sozinho sempre que a placa for ligada no cabo).
+2. Se a placa ainda não tiver MicroPython, o app avisa e oferece a instalação: basta clicar em **Instalar agora**.
    Se não funcionar, segure **BOOT**, aperte e solte **RESET**, solte **BOOT** e tente de novo.
 3. Monte o programa com os blocos (o código Python aparece ao lado).
 4. Clique em **Enviar para a placa**. O programa é gravado como `main.py` e começa a rodar.
