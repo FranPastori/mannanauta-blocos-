@@ -15,7 +15,7 @@ Endereço: https://franpastori.github.io/mannanauta-blocos-/
    depois o app conecta sozinho sempre que a placa for ligada no cabo.
 2. Se a placa ainda não estiver preparada, o app avisa e oferece prepará-la: basta clicar em **Preparar agora**.
    Se não começar, segure **BOOT**, aperte e solte **RESET**, solte **BOOT** e tente de novo.
-3. Monte o programa com os blocos (o código aparece ao lado).
+3. Monte o programa com os blocos.
 4. Clique em **Enviar para a placa**. O programa é gravado e começa a rodar.
 5. O que o programa escrever aparece na aba **Monitor serial**.
 6. Com a placa conectada, o mesmo botão vira **Desconectar placa**.

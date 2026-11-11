@@ -179,7 +179,7 @@ $('btConectar').onclick = async () => {
   if (!temSerial || emQuadro) { status('Conexão indisponível aqui (veja o aviso)'); return; }
   try {
     if (conexao.porta) await desconectar();
-    else { await conectar(); document.querySelector('.abas button[data-aba="monitor"]').click(); await aoConectar(false); }
+    else { await conectar(); await aoConectar(false); }
   } catch (e) { if (!(e && e.name === 'NotFoundError')) status('Não foi possível conectar'); }
 };
 
@@ -217,7 +217,6 @@ $('btEnviar').onclick = async () => {
     noMonitor('\n--- programa enviado, reiniciando a placa ---\n');
     await escrever('\x04');
     status('Programa enviado! ✔');
-    document.querySelector('.abas button[data-aba="monitor"]').click();
     setTimeout(() => progresso(0), 1500);
   } catch (e) {
     conexao.silencio = false;
@@ -230,7 +229,6 @@ $('btEnviar').onclick = async () => {
 
 
 function mostrarErro(texto) {
-  document.querySelector('.abas button[data-aba="monitor"]').click();
   noMonitor('\n⚠ ' + texto + '\n');
 }
 $('btLimparMonitor').onclick = () => { $('monitor').textContent = ''; };

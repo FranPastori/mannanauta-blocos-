@@ -29,13 +29,9 @@ button:disabled { opacity:.5; cursor:default; }
 #status { font-size:13px; font-weight:700; color:#5b6672; }
 main { flex:1; display:flex; min-height:0; border-top:1px solid var(--borda); }
 #areaBlocos { flex:1; min-width:0; }
-aside { width:36%; min-width:260px; max-width:560px; display:flex; flex-direction:column; border-left:1px solid var(--borda); background:var(--fundo); }
-.abas { display:flex; border-bottom:1px solid var(--borda); background:#fff; }
-.abas button { flex:1; border:0; border-radius:0; padding:10px; background:transparent; color:#5b6672; }
-.abas button:hover { color:var(--texto); }
-.abas button.ativa { color:var(--texto); box-shadow: inset 0 -3px 0 var(--rosa); }
-.painel { flex:1; overflow:auto; display:none; }
-.painel.ativo { display:block; }
+aside { width:30%; min-width:240px; max-width:460px; display:flex; flex-direction:column; border-left:1px solid var(--borda); background:var(--fundo); }
+.tituloPainel { padding:10px 14px; font-weight:800; font-size:14px; background:#fff; border-bottom:1px solid var(--borda); box-shadow: inset 0 -3px 0 var(--rosa); }
+.painel { flex:1; overflow:auto; background:#0b1118; }
 pre { margin:0; padding:12px; font-size:12.5px; line-height:1.45; white-space:pre; font-family: ui-monospace, Menlo, Consolas, monospace; }
 #monitor { background:#0b1118; color:#7fe3a4; min-height:100%; }
 .barraPainel { display:flex; gap:6px; padding:8px; border-top:1px solid var(--borda); background:#fff; flex-wrap:wrap; }

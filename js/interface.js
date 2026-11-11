@@ -27,18 +27,11 @@ carregar(salvo || PROJETO_INICIAL);
 let codigoAtual = '';
 function atualizar() {
   try { codigoAtual = gerarPrograma(ws); } catch (e) { codigoAtual = '// Erro ao gerar o código: ' + e.message; }
-  $('codigo').textContent = codigoAtual;
   armazenar.gravar('mannaBlocos.projeto', JSON.stringify(Blockly.serialization.workspaces.save(ws)));
 }
 ws.addChangeListener((e) => { if (!e.isUiEvent) atualizar(); });
 atualizar();
 
-// Abas
-document.querySelectorAll('.abas button').forEach((bt) => bt.addEventListener('click', () => {
-  document.querySelectorAll('.abas button').forEach((x) => x.classList.toggle('ativa', x === bt));
-  document.querySelectorAll('.painel').forEach((p) => p.classList.toggle('ativo', p.id === 'painel-' + bt.dataset.aba));
-  Blockly.svgResize(ws);
-}));
 window.addEventListener('resize', () => Blockly.svgResize(ws));
 
 // Novo / Abrir / Salvar
@@ -56,10 +49,6 @@ $('arquivo').onchange = async (e) => {
   try { carregar(JSON.parse(await arq.text())); status('Projeto aberto'); }
   catch (err) { status('Não consegui abrir esse arquivo'); }
   e.target.value = '';
-};
-$('btCopiar').onclick = async () => {
-  try { await navigator.clipboard.writeText(codigoAtual); status('Código copiado'); }
-  catch (e) { status('Não foi possível copiar'); }
 };
 
 // Aviso quando o navegador não tem Web Serial (ou a página está dentro de um quadro)
