@@ -5,7 +5,7 @@
 # Também traz: leitura analógica, Wi-Fi, envio de dados para o Blynk e uma página web própria da placa.
 # Os desenhos de letras, números, símbolos e carinhas são os mesmos da biblioteca original.
 
-VERSAO = "5"
+VERSAO = "6"
 
 import math
 import time
@@ -585,10 +585,16 @@ def endereco_pagina():
 
 
 # ------------------------------------------------- Página web da placa
-_titulo = "mannaNAUTA"
-_nomes = []
-_valores = {}
-_servidor_ligado = False
+# O estado da página fica guardado fora do módulo, para continuar valendo quando
+# o programa é enviado de novo sem reiniciar a placa (o servidor continua o mesmo).
+import builtins
+_pg = getattr(builtins, "_mn_pagina", None)
+if _pg is None:
+    _pg = {"titulo": "mannaNAUTA", "nomes": [], "valores": {}, "ligado": False}
+    builtins._mn_pagina = _pg
+else:
+    _pg["nomes"].clear()
+    _pg["valores"].clear()
 
 _HTML = """<!DOCTYPE html><html lang="pt-BR"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1"><title>mannaNAUTA</title>
@@ -632,14 +638,15 @@ def _texto(v):
 
 def pagina_mostrar(nome, valor):
     nome = str(nome)
-    if nome not in _valores:
-        _nomes.append(nome)
-    _valores[nome] = _texto(valor)
+    if nome not in _pg["valores"]:
+        _pg["nomes"].append(nome)
+    _pg["valores"][nome] = _texto(valor)
 
 
 def _dados():
     import json
-    return json.dumps({"titulo": _titulo, "itens": [[n, _valores.get(n, "")] for n in _nomes]})
+    pg = builtins._mn_pagina
+    return json.dumps({"titulo": pg["titulo"], "itens": [[n, pg["valores"].get(n, "")] for n in pg["nomes"]]})
 
 
 def _servidor():
@@ -679,11 +686,11 @@ def _servidor():
 
 def pagina_iniciar(titulo="mannaNAUTA"):
     """Liga a página web da placa. Ela funciona em segundo plano, junto com o programa."""
-    global _titulo, _servidor_ligado
-    _titulo = str(titulo)
-    if _servidor_ligado:
+    _pg["titulo"] = str(titulo)
+    if _pg["ligado"]:
+        print("Página web ligada! Abra no celular:", endereco_pagina())
         return
     import _thread
     _thread.start_new_thread(_servidor, ())
-    _servidor_ligado = True
+    _pg["ligado"] = True
     print("Página web ligada! Abra no celular:", endereco_pagina())

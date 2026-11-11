@@ -6,6 +6,7 @@ const enc = new TextEncoder();
 const esperar = (ms) => new Promise((r) => setTimeout(r, ms));
 
 function noMonitor(texto) {
+  texto = texto.replace(/\x04>?/g, '');
   const m = $('monitor');
   m.textContent = (m.textContent + texto).slice(-20000);
   m.parentElement.scrollTop = m.parentElement.scrollHeight;
@@ -119,6 +120,14 @@ async function carregarBiblioteca() {
   return bibliotecaTexto;
 }
 
+// Roda o main.py sem reiniciar a placa (reiniciar derruba a conexão USB desta placa).
+// Fica no modo raw; o próximo envio interrompe com Ctrl-C.
+const CODIGO_RODAR = "import sys\nsys.modules.pop('mannanauta', None)\ntry:\n _f = open('main.py')\nexcept OSError:\n _f = None\nif _f:\n _c = _f.read()\n _f.close()\n exec(_c, {'__name__': '__main__'})\n";
+async function rodarPrograma() {
+  await escrever(CODIGO_RODAR);
+  await escrever('\x04');
+}
+
 // Confere se a placa responde como MicroPython (sem mexer no programa dela).
 async function temMicroPython() {
   conexao.silencio = true;
@@ -128,10 +137,9 @@ async function temMicroPython() {
     const desde = conexao.buffer.length;
     await escrever('\x01');
     await aguardar('raw REPL; CTRL-B to exit', desde, 2500);
-    // volta ao normal e reinicia, para o programa da placa continuar rodando
-    await escrever('\x02');
-    await esperar(100);
-    await escrever('\x04');
+    // volta a rodar o programa que já estava gravado na placa
+    conexao.silencio = false;
+    await rodarPrograma();
     return true;
   } catch (e) {
     return false;
@@ -210,12 +218,10 @@ $('btEnviar').onclick = async () => {
     status('Enviando o programa…');
     await gravarArquivo('main.py', codigoAtual);
     progresso(1);
-    // Sai do modo raw e reinicia: o main.py começa a rodar
-    await escrever('\x02');
-    await esperar(100);
+    // Roda o programa novo (sem reiniciar a placa)
     conexao.silencio = false;
-    noMonitor('\n--- programa enviado, reiniciando a placa ---\n');
-    await escrever('\x04');
+    noMonitor('\n--- programa enviado ---\n');
+    await rodarPrograma();
     status('Programa enviado! ✔');
     setTimeout(() => progresso(0), 1500);
   } catch (e) {
