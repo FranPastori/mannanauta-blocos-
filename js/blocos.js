@@ -13,7 +13,12 @@ const armazenar = {
 };
 
 /* ---------------------------- Cores ---------------------------------- */
-const COR = { evento:'#FFBF00', controle:'#FFAB19', matriz:'#9966FF', cor:'#CF63CF', sensor:'#4CBF56', serial:'#0FBD8C', matematica:'#59C059', logica:'#5CB1D6', variavel:'#FF8C1A', pinos:'#5C68A6', internet:'#1CA8DD', pagina:'#E0567A' };
+const COR = { evento:'#FFBF00', controle:'#FFAB19', matriz:'#9966FF', cor:'#CF63CF', sensor:'#4CBF56', serial:'#0FBD8C', matematica:'#59C059', logica:'#5CB1D6', variavel:'#FF8C1A', pinos:'#5C68A6', internet:'#1CA8DD', pagina:'#E0567A', som:'#C94FB0', componentes:'#00979D' };
+
+// Pinos livres da placa (sem os do sensor de movimento, da matriz de LEDs e da USB)
+const PINOS_LIVRES = [1,2,3,6,7,8,9,10,11,12,13,14,15,16,17,18,21,38,39,40,41,42].map((n) => [String(n), String(n)]);
+const pinoCampo = (nome = 'PINO') => ({ type:'field_dropdown', name:nome, options:PINOS_LIVRES });
+const NOTAS = [['Dó','262'],['Ré','294'],['Mi','330'],['Fá','349'],['Sol','392'],['Lá','440'],['Si','494'],['Dó agudo','523']];
 
 const CORES_NOMEADAS = [
   ['🔴 vermelho', '0xFF0000'], ['🟢 verde', '0x00FF00'], ['🔵 azul', '0x0000FF'],
@@ -78,6 +83,21 @@ Blockly.defineBlocksWithJsonArray([
 
   // Pinos
   { type:'mn_analogico', message0:'leitura analógica no pino %1', args0:[{type:'field_dropdown',name:'PINO',options:[['1','1'],['2','2'],['3','3'],['6','6'],['7','7'],['8','8'],['9','9'],['10','10']]}], output:'Number', colour:COR.pinos, tooltip:'Valor de 0 a 4095 (0 a 3,3 V). Ex.: sensor de umidade do solo.' },
+
+  { type:'mn_pino_modo', message0:'definir pino %1 como %2', args0:[pinoCampo(),{type:'field_dropdown',name:'MODO',options:[['saída','saida'],['entrada','entrada'],['entrada com pull-up','pullup']]}], previousStatement:null, nextStatement:null, colour:COR.pinos, tooltip:'Igual ao pinMode do Arduino.' },
+  { type:'mn_digital_escrever', message0:'pino digital %1 %2', args0:[pinoCampo(),{type:'field_dropdown',name:'VALOR',options:[['ligado (ALTO)','1'],['desligado (BAIXO)','0']]}], previousStatement:null, nextStatement:null, colour:COR.pinos, tooltip:'Igual ao digitalWrite do Arduino.' },
+  { type:'mn_digital_ler', message0:'leitura digital no pino %1', args0:[pinoCampo()], output:'Boolean', colour:COR.pinos, tooltip:'Igual ao digitalRead do Arduino: verdadeiro quando o pino está em ALTO.' },
+  { type:'mn_pwm', message0:'definir PWM no pino %1 para %2 (0 a 255)', args0:[pinoCampo(),{type:'input_value',name:'V',check:'Number'}], previousStatement:null, nextStatement:null, colour:COR.pinos, inputsInline:true, tooltip:'Igual ao analogWrite do Arduino. Ex.: brilho de um LED.' },
+
+  // Som (buzzer)
+  { type:'mn_nota', message0:'tocar nota %1 no pino %2 por %3 segundos', args0:[{type:'field_dropdown',name:'NOTA',options:NOTAS},pinoCampo(),{type:'input_value',name:'S',check:'Number'}], previousStatement:null, nextStatement:null, colour:COR.som, inputsInline:true },
+  { type:'mn_tom', message0:'tocar som no pino %1 com frequência %2 Hz', args0:[pinoCampo(),{type:'input_value',name:'F',check:'Number'}], previousStatement:null, nextStatement:null, colour:COR.som, inputsInline:true, tooltip:'Igual ao tone do Arduino: o som continua até usar "parar som".' },
+  { type:'mn_sem_tom', message0:'parar som no pino %1', args0:[pinoCampo()], previousStatement:null, nextStatement:null, colour:COR.som, tooltip:'Igual ao noTone do Arduino.' },
+
+  // Componentes
+  { type:'mn_servo', message0:'girar servo do pino %1 para %2 graus', args0:[pinoCampo(),{type:'input_value',name:'A',check:'Number'}], previousStatement:null, nextStatement:null, colour:COR.componentes, inputsInline:true, tooltip:'Servo motor comum (0 a 180 graus).' },
+  { type:'mn_distancia', message0:'distância do ultrassônico em cm (trig %1 echo %2)', args0:[pinoCampo('TRIG'),pinoCampo('ECHO')], output:'Number', colour:COR.componentes, tooltip:'Sensor HC-SR04. Use um sensor que funcione com 3,3 V ou um divisor de tensão no echo.' },
+  { type:'mn_botao', message0:'botão no pino %1 pressionado?', args0:[pinoCampo()], output:'Boolean', colour:COR.componentes, tooltip:'Botão ligado entre o pino e o GND.' },
 
   // Internet (IoT)
   { type:'mn_wifi', message0:'conectar ao Wi-Fi rede %1 senha %2', args0:[{type:'field_input',name:'REDE',text:'nome da rede'},{type:'field_input',name:'SENHA',text:'senha'}], previousStatement:null, nextStatement:null, colour:COR.internet, tooltip:'Use no "quando a placa ligar". Redes com página de login não funcionam.' },

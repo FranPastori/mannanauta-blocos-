@@ -53,7 +53,21 @@ const toolbox = {
       {kind:'block',type:'mn_nome_sensor'}
     ]},
     { kind:'category', name:'Pinos', colour:COR.pinos, contents:[
+      {kind:'block',type:'mn_pino_modo'},
+      {kind:'block',type:'mn_digital_escrever'},
+      {kind:'block',type:'mn_digital_ler'},
+      {kind:'block',type:'mn_pwm',inputs:{V:sombraNum(128)}},
       {kind:'block',type:'mn_analogico'}
+    ]},
+    { kind:'category', name:'Som', colour:COR.som, contents:[
+      {kind:'block',type:'mn_nota',inputs:{S:sombraNum(0.5)}},
+      {kind:'block',type:'mn_tom',inputs:{F:sombraNum(440)}},
+      {kind:'block',type:'mn_sem_tom'}
+    ]},
+    { kind:'category', name:'Componentes', colour:COR.componentes, contents:[
+      {kind:'block',type:'mn_servo',inputs:{A:sombraNum(90)}},
+      {kind:'block',type:'mn_distancia'},
+      {kind:'block',type:'mn_botao'}
     ]},
     { kind:'category', name:'Internet (IoT)', colour:COR.internet, contents:[
       {kind:'block',type:'mn_wifi'},

@@ -5,7 +5,7 @@
 # Também traz: leitura analógica, Wi-Fi, envio de dados para o Blynk e uma página web própria da placa.
 # Os desenhos de letras, números, símbolos e carinhas são os mesmos da biblioteca original.
 
-VERSAO = "4"
+VERSAO = "5"
 
 import math
 import time
@@ -364,6 +364,116 @@ def leitura_analogica(pino):
     for _ in range(8):
         total += adc.read_u16() >> 4
     return total // 8
+
+
+# ------------------------------------------------- Pinos digitais, PWM, som, servo, ultrassônico
+_pinos = {}
+_pwms = {}
+
+
+def pino_modo(pino, modo):
+    # modo: "saida", "entrada" ou "pullup"
+    pino = int(pino)
+    if modo == "saida":
+        _pinos[pino] = Pin(pino, Pin.OUT)
+    elif modo == "pullup":
+        _pinos[pino] = Pin(pino, Pin.IN, Pin.PULL_UP)
+    else:
+        _pinos[pino] = Pin(pino, Pin.IN)
+
+
+def _parar_pwm(pino):
+    p = _pwms.pop(pino, None)
+    if p is not None:
+        try:
+            p.deinit()
+        except Exception:
+            pass
+
+
+def escrever_digital(pino, valor):
+    pino = int(pino)
+    _parar_pwm(pino)
+    p = _pinos.get(pino)
+    if p is None:
+        p = _pinos[pino] = Pin(pino, Pin.OUT)
+    p.value(1 if valor else 0)
+
+
+def ler_digital(pino):
+    pino = int(pino)
+    p = _pinos.get(pino)
+    if p is None:
+        p = _pinos[pino] = Pin(pino, Pin.IN)
+    return p.value() == 1
+
+
+def botao(pino):
+    # botão ligado entre o pino e o GND (usa o resistor interno de pull-up)
+    pino = int(pino)
+    p = _pinos.get(pino)
+    if p is None:
+        p = _pinos[pino] = Pin(pino, Pin.IN, Pin.PULL_UP)
+    return p.value() == 0
+
+
+def _pwm(pino, freq):
+    from machine import PWM
+    pino = int(pino)
+    p = _pwms.get(pino)
+    if p is None:
+        p = _pwms[pino] = PWM(Pin(pino), freq=int(freq), duty_u16=0)
+    else:
+        p.freq(int(freq))
+    return p
+
+
+def escrever_pwm(pino, valor):
+    # valor de 0 a 255, como o analogWrite do Arduino
+    _pwm(pino, 1000).duty_u16(_limitar(valor, 0, 255) * 257)
+
+
+def tom(pino, frequencia):
+    f = int(frequencia)
+    if f <= 0:
+        sem_tom(pino)
+        return
+    _pwm(pino, f).duty_u16(32768)
+
+
+def sem_tom(pino):
+    p = _pwms.get(int(pino))
+    if p is not None:
+        p.duty_u16(0)
+
+
+def tocar(pino, frequencia, segundos):
+    tom(pino, frequencia)
+    time.sleep(segundos)
+    sem_tom(pino)
+
+
+def servo(pino, angulo):
+    # servo comum: pulso de 0,5 ms (0°) a 2,5 ms (180°), 50 Hz
+    a = _limitar(angulo, 0, 180)
+    pulso_us = 500 + a * 2000 // 180
+    _pwm(pino, 50).duty_u16(pulso_us * 65535 // 20000)
+
+
+def distancia(trig, echo):
+    # sensor ultrassônico HC-SR04: distância em centímetros (0 se não houver eco)
+    from machine import time_pulse_us
+    t = Pin(int(trig), Pin.OUT)
+    e = Pin(int(echo), Pin.IN)
+    t.value(0)
+    time.sleep_us(2)
+    t.value(1)
+    time.sleep_us(10)
+    t.value(0)
+    dur = time_pulse_us(e, 1, 30000)
+    if dur < 0:
+        return 0
+    return round(dur / 58.0, 1)
 
 
 # ------------------------------------------------- Wi-Fi
