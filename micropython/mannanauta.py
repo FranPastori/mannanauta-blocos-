@@ -5,7 +5,7 @@
 # Também traz: leitura analógica, Wi-Fi, envio de dados para o Blynk e uma página web própria da placa.
 # Os desenhos de letras, números, símbolos e carinhas são os mesmos da biblioteca original.
 
-VERSAO = "6"
+VERSAO = "7"
 
 import math
 import time
@@ -474,6 +474,62 @@ def distancia(trig, echo):
     if dur < 0:
         return 0
     return round(dur / 58.0, 1)
+
+
+# ------------------------------------------------- Botões da placa e DHT11
+# Botões de toque: esquerdo = GPIO7, direito = GPIO6 (olhando a placa de frente). BOOT = GPIO0.
+_toques = {}
+
+
+def botao_toque(lado):
+    from machine import TouchPad
+    pino = 7 if lado == "esquerdo" else 6
+    t = _toques.get(pino)
+    if t is None:
+        tp = TouchPad(Pin(pino))
+        base = tp.read()
+        t = _toques[pino] = [tp, base]
+    valor = t[0].read()
+    base = t[1]
+    tocado = abs(valor - base) > base * 0.15
+    if not tocado:
+        t[1] = (base * 15 + valor) // 16  # acompanha mudanças lentas do ambiente
+    return tocado
+
+
+def botao_boot():
+    p = _pinos.get(0)
+    if p is None:
+        p = _pinos[0] = Pin(0, Pin.IN, Pin.PULL_UP)
+    return p.value() == 0
+
+
+_dhts = {}
+
+
+def _dht(pino):
+    import dht
+    pino = int(pino)
+    d = _dhts.get(pino)
+    if d is None:
+        d = _dhts[pino] = [dht.DHT11(Pin(pino)), 0, 0.0, 0.0]
+    agora = time.ticks_ms()
+    if d[1] == 0 or time.ticks_diff(agora, d[1]) >= 2000:
+        try:
+            d[0].measure()
+            d[2], d[3] = d[0].temperature(), d[0].humidity()
+            d[1] = agora
+        except OSError:
+            print("DHT11 não respondeu no pino", pino)
+    return d
+
+
+def temperatura_ar(pino):
+    return _dht(pino)[2]
+
+
+def umidade_ar(pino):
+    return _dht(pino)[3]
 
 
 # ------------------------------------------------- Wi-Fi

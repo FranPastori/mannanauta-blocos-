@@ -13,10 +13,14 @@ const armazenar = {
 };
 
 /* ---------------------------- Cores ---------------------------------- */
-const COR = { evento:'#FFBF00', controle:'#FFAB19', matriz:'#9966FF', cor:'#CF63CF', sensor:'#4CBF56', serial:'#0FBD8C', matematica:'#59C059', logica:'#5CB1D6', variavel:'#FF8C1A', pinos:'#5C68A6', internet:'#1CA8DD', pagina:'#E0567A', som:'#C94FB0', componentes:'#00979D' };
+const COR = { evento:'#FFBF00', controle:'#FFAB19', matriz:'#9966FF', cor:'#CF63CF', sensor:'#4CBF56', serial:'#0FBD8C', matematica:'#59C059', logica:'#5CB1D6', variavel:'#FF8C1A', pinos:'#5C68A6', internet:'#1CA8DD', pagina:'#E0567A', som:'#C94FB0', componentes:'#00979D', botoes:'#E8A317' };
 
 // Pinos livres da placa (sem os do sensor de movimento, da matriz de LEDs e da USB)
-const PINOS_LIVRES = [1,2,3,6,7,8,9,10,11,12,13,14,15,16,17,18,21,38,39,40,41,42].map((n) => [String(n), String(n)]);
+// Pinos da barra e da cabeça da placa (mapa de pinos do mannaNAUTA), sem os ocupados:
+// 4 e 5 (sensor de movimento), 6 e 7 (botões de toque), 0 (BOOT), 47 (matriz de LEDs).
+const PINOS_LIVRES = [1,2,3,8,9,10,11,12,13,14,17,18,21,33,34,35,36,37,38].map((n) => [String(n), String(n)]);
+// Pinos analógicos que funcionam junto com o Wi-Fi (ADC1)
+const PINOS_ANALOGICOS = [1,2,3,8,9,10].map((n) => [String(n), String(n)]);
 const pinoCampo = (nome = 'PINO') => ({ type:'field_dropdown', name:nome, options:PINOS_LIVRES });
 const NOTAS = [['Dó','262'],['Ré','294'],['Mi','330'],['Fá','349'],['Sol','392'],['Lá','440'],['Si','494'],['Dó agudo','523']];
 
@@ -82,7 +86,7 @@ Blockly.defineBlocksWithJsonArray([
   { type:'mn_limitar', message0:'limitar %1 entre %2 e %3', args0:[{type:'input_value',name:'V',check:'Number'},{type:'input_value',name:'A',check:'Number'},{type:'input_value',name:'B',check:'Number'}], output:'Number', colour:COR.matematica, inputsInline:true, tooltip:'Igual ao constrain() do Arduino: o valor nunca passa do mínimo nem do máximo.' },
 
   // Pinos
-  { type:'mn_analogico', message0:'leitura analógica no pino %1', args0:[{type:'field_dropdown',name:'PINO',options:[['1','1'],['2','2'],['3','3'],['6','6'],['7','7'],['8','8'],['9','9'],['10','10']]}], output:'Number', colour:COR.pinos, tooltip:'Valor de 0 a 4095 (0 a 3,3 V). Ex.: sensor de umidade do solo.' },
+  { type:'mn_analogico', message0:'leitura analógica no pino %1', args0:[{type:'field_dropdown',name:'PINO',options:PINOS_ANALOGICOS}], output:'Number', colour:COR.pinos, tooltip:'Valor de 0 a 4095 (0 a 3,3 V). Ex.: sensor de umidade do solo.' },
 
   { type:'mn_pino_modo', message0:'definir pino %1 como %2', args0:[pinoCampo(),{type:'field_dropdown',name:'MODO',options:[['saída','saida'],['entrada','entrada'],['entrada com pull-up','pullup']]}], previousStatement:null, nextStatement:null, colour:COR.pinos, tooltip:'Igual ao pinMode do Arduino.' },
   { type:'mn_digital_escrever', message0:'pino digital %1 %2', args0:[pinoCampo(),{type:'field_dropdown',name:'VALOR',options:[['ligado (ALTO)','1'],['desligado (BAIXO)','0']]}], previousStatement:null, nextStatement:null, colour:COR.pinos, tooltip:'Igual ao digitalWrite do Arduino.' },
@@ -98,6 +102,12 @@ Blockly.defineBlocksWithJsonArray([
   { type:'mn_servo', message0:'girar servo do pino %1 para %2 graus', args0:[pinoCampo(),{type:'input_value',name:'A',check:'Number'}], previousStatement:null, nextStatement:null, colour:COR.componentes, inputsInline:true, tooltip:'Servo motor comum (0 a 180 graus).' },
   { type:'mn_distancia', message0:'distância do ultrassônico em cm (trig %1 echo %2)', args0:[pinoCampo('TRIG'),pinoCampo('ECHO')], output:'Number', colour:COR.componentes, tooltip:'Sensor HC-SR04. Use um sensor que funcione com 3,3 V ou um divisor de tensão no echo.' },
   { type:'mn_botao', message0:'botão no pino %1 pressionado?', args0:[pinoCampo()], output:'Boolean', colour:COR.componentes, tooltip:'Botão ligado entre o pino e o GND.' },
+
+  { type:'mn_dht', message0:'%1 do DHT11 no pino %2', args0:[{type:'field_dropdown',name:'TIPO',options:[['temperatura do ar (°C)','temperatura_ar'],['umidade do ar (%)','umidade_ar']]},pinoCampo()], output:'Number', colour:COR.componentes, tooltip:'Sensor DHT11. Ele mede no máximo uma vez a cada 2 segundos.' },
+
+  // Botões da placa
+  { type:'mn_toque', message0:'botão de toque %1 tocado?', args0:[{type:'field_dropdown',name:'LADO',options:[['esquerdo','esquerdo'],['direito','direito']]}], output:'Boolean', colour:COR.botoes, tooltip:'Os botões de toque ficam nas mãos do astronauta (esquerdo = GPIO7, direito = GPIO6).' },
+  { type:'mn_boot', message0:'botão BOOT pressionado?', output:'Boolean', colour:COR.botoes, tooltip:'Botão BOOT/Usuário da placa (GPIO0).' },
 
   // Internet (IoT)
   { type:'mn_wifi', message0:'conectar ao Wi-Fi rede %1 senha %2', args0:[{type:'field_input',name:'REDE',text:'nome da rede'},{type:'field_input',name:'SENHA',text:'senha'}], previousStatement:null, nextStatement:null, colour:COR.internet, tooltip:'Use no "quando a placa ligar". Redes com página de login não funcionam.' },

@@ -52,6 +52,10 @@ const toolbox = {
       {kind:'block',type:'mn_conectado'},
       {kind:'block',type:'mn_nome_sensor'}
     ]},
+    { kind:'category', name:'Botões da placa', colour:COR.botoes, contents:[
+      {kind:'block',type:'mn_toque'},
+      {kind:'block',type:'mn_boot'}
+    ]},
     { kind:'category', name:'Pinos', colour:COR.pinos, contents:[
       {kind:'block',type:'mn_pino_modo'},
       {kind:'block',type:'mn_digital_escrever'},
@@ -67,7 +71,8 @@ const toolbox = {
     { kind:'category', name:'Componentes', colour:COR.componentes, contents:[
       {kind:'block',type:'mn_servo',inputs:{A:sombraNum(90)}},
       {kind:'block',type:'mn_distancia'},
-      {kind:'block',type:'mn_botao'}
+      {kind:'block',type:'mn_botao'},
+      {kind:'block',type:'mn_dht'}
     ]},
     { kind:'category', name:'Internet (IoT)', colour:COR.internet, contents:[
       {kind:'block',type:'mn_wifi'},
