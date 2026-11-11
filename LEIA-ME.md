@@ -1,8 +1,11 @@
 # mannaNAUTA Blocos
 
 Plataforma de programação em blocos para a placa **mannaNAUTA** (ESP32-S3), feita para o projeto Manna.
-Roda direto no navegador (Chrome ou Edge de computador) e **não precisa de servidor**: os blocos geram
-**MicroPython**, que é enviado para a placa pelo cabo USB.
+Roda direto no navegador (Chrome ou Edge de computador) e **não precisa de servidor**: os programas
+vão para a placa pelo cabo USB.
+
+> Para quem desenvolve: por baixo, os blocos geram MicroPython. Na interface para alunos e professores,
+> esse nome não aparece: falamos em "preparar a placa".
 
 Endereço: https://franpastori.github.io/mannanauta-blocos-/
 
@@ -10,7 +13,8 @@ Endereço: https://franpastori.github.io/mannanauta-blocos-/
 
 1. Ligue a placa no USB e clique em **Conectar placa** (só na primeira vez em cada computador; depois o app
    conecta sozinho sempre que a placa for ligada no cabo).
-2. Se a placa ainda não tiver MicroPython, o app avisa e oferece a instalação: basta clicar em **Instalar agora**.
+2. Se a placa ainda não estiver preparada, o app avisa e oferece prepará-la: basta clicar em **Preparar agora**
+   (o botão **Preparar placa** faz o mesmo a qualquer momento).
    Se não funcionar, segure **BOOT**, aperte e solte **RESET**, solte **BOOT** e tente de novo.
 3. Monte o programa com os blocos (o código Python aparece ao lado).
 4. Clique em **Enviar para a placa**. O programa é gravado como `main.py` e começa a rodar.

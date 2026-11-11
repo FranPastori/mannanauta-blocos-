@@ -77,7 +77,7 @@
   <button id="btSalvar" title="Baixar o projeto">Salvar</button>
   <span class="espaco"></span>
   <span id="status">Pronto</span>
-  <button id="btInstalar" title="Só na primeira vez: instala o MicroPython na placa">Instalar MicroPython</button>
+  <button id="btInstalar" title="Só na primeira vez: deixa a placa pronta para receber programas">Preparar placa</button>
   <button id="btConectar">Conectar placa</button>
   <button id="btParar" title="Para o programa que está rodando">Parar</button>
   <button id="btEnviar" class="principal">Enviar para a placa</button>
@@ -102,10 +102,10 @@
 </main>
 
 <dialog id="dlgInstalar">
-  <h2>Instalar o MicroPython</h2>
+  <h2>Preparar a placa</h2>
   <p id="txtInstalar" style="font-size:14px">Faça isso só se a placa for nova ou parar de responder. Tudo o que estiver gravado nela será apagado.</p>
-  <p style="font-size:14px">Se a instalação não começar, segure o botão <b>BOOT</b>, aperte e solte <b>RESET</b>, solte o <b>BOOT</b> e tente de novo.</p>
-  <div class="acoes"><button id="btCancelarInst">Cancelar</button><button id="btConfirmarInst" class="principal">Instalar agora</button></div>
+  <p style="font-size:14px">Se não começar, segure o botão <b>BOOT</b>, aperte e solte <b>RESET</b>, solte o <b>BOOT</b> e tente de novo.</p>
+  <div class="acoes"><button id="btCancelarInst">Cancelar</button><button id="btConfirmarInst" class="principal">Preparar agora</button></div>
 </dialog>
 
 <script>
@@ -402,7 +402,7 @@ function gerarPrograma(ws) {
   const u = Py.usa;
   const L = [];
   L.push('# Programa gerado pelo mannaNAUTA Blocos');
-  L.push('# Placa: mannaNAUTA (ESP32-S3) com MicroPython');
+  L.push('# Placa: mannaNAUTA');
   L.push('');
   L.push('import time');
   if (u.has('math')) L.push('import math');
@@ -661,7 +661,7 @@ async function aguardar(fim, desde, tempo = 5000) {
     if (i >= 0) return i + fim.length;
     await esperar(20);
   }
-  throw new Error('A placa não respondeu. Confira o cabo e se o MicroPython está instalado.');
+  throw new Error('A placa não respondeu. Confira o cabo e se a placa já foi preparada.');
 }
 
 // Entra no modo "raw REPL" do MicroPython
@@ -743,7 +743,7 @@ async function aoConectar(automatico) {
     if (await temMicroPython()) {
       status(automatico ? 'Placa conectada automaticamente ✔' : 'Placa conectada ✔');
     } else {
-      status('Esta placa ainda não tem o MicroPython');
+      status('Esta placa ainda não está preparada');
       pedirInstalacao(true);
     }
   } finally { verificando = false; }
@@ -751,7 +751,7 @@ async function aoConectar(automatico) {
 
 function pedirInstalacao(semMicroPython) {
   $('txtInstalar').textContent = semMicroPython
-    ? 'Esta placa ainda não tem o MicroPython, que é necessário para receber os programas. Instalar agora? Leva cerca de 1 minuto e apaga o que estiver gravado na placa.'
+    ? 'Esta placa ainda não está preparada para receber os programas dos blocos. Preparar agora? Leva cerca de 1 minuto e apaga o que estiver gravado na placa.'
     : 'Faça isso só se a placa for nova ou parar de responder. Tudo o que estiver gravado nela será apagado.';
   if (!$('dlgInstalar').open) $('dlgInstalar').showModal();
 }
@@ -791,7 +791,7 @@ $('btEnviar').onclick = async () => {
     try { await entrarRaw(); }
     catch (e) {
       conexao.silencio = false; progresso(0);
-      status('Esta placa ainda não tem o MicroPython');
+      status('Esta placa ainda não está preparada');
       pedirInstalacao(true);
       return;
     }
@@ -801,7 +801,7 @@ $('btEnviar').onclick = async () => {
     const [saida] = await executar(
       `try:\n import os\n f=open('mannanauta.py')\n l=f.readline()\n while l and not l.startswith('VERSAO'):\n  l=f.readline()\n f.close()\n print(l.strip())\nexcept Exception:\n print('nada')`);
     if (!saida.includes(`VERSAO = "${versao}"`)) {
-      status('Instalando a biblioteca mannanauta na placa…');
+      status('Preparando a placa…');
       await gravarArquivo('mannanauta.py', lib);
     }
     status('Enviando o programa…');
@@ -849,7 +849,7 @@ $('btInstalar').onclick = () => pedirInstalacao(false);
 $('btCancelarInst').onclick = () => $('dlgInstalar').close();
 $('btConfirmarInst').onclick = async () => {
   $('dlgInstalar').close();
-  if (!temSerial || emQuadro) { status('Instalação indisponível aqui (veja o aviso)'); return; }
+  if (!temSerial || emQuadro) { status('Indisponível aqui (veja o aviso)'); return; }
   const bt = $('btInstalar');
   bt.disabled = true; $('btEnviar').disabled = true;
   let transporte = null;
@@ -868,28 +868,28 @@ $('btConfirmarInst').onclick = async () => {
     let tamanho = '';
     try { tamanho = (await carregador.detectFlashSize()) || ''; } catch (e) {}
     const arquivo = /^(2|4)MB/.test(tamanho) ? 'firmware/ESP32_GENERIC_S3-FLASH_4M.bin' : 'firmware/ESP32_GENERIC_S3.bin';
-    status('Baixando o MicroPython…');
+    status('Preparando a placa…');
     const r = await fetch(arquivo, { cache: 'no-cache' });
     if (!r.ok) throw new Error('Não encontrei o arquivo ' + arquivo);
     const dados = new Uint8Array(await r.arrayBuffer());
-    status('Gravando o MicroPython (cerca de 1 minuto)…');
+    status('Preparando a placa (cerca de 1 minuto)…');
     await carregador.writeFlash({
       fileArray: [{ address: 0x0, data: dados }], flashSize: 'keep', flashMode: 'keep', flashFreq: 'keep',
       eraseAll: true, compress: true,
       reportProgress: (i, escrito, total) => progresso(0.05 + 0.95 * escrito / total)
     });
     try { await carregador.after('hard_reset'); } catch (e) {}
-    status('MicroPython instalado! ✔ Reconectando…');
+    status('Placa preparada! ✔ Reconectando…');
     setTimeout(async () => {
       instalando = false;
       await conectarAutomatico();
-      if (!conexao.porta) status('MicroPython instalado! ✔ Clique em "Conectar placa" e escolha a porta de novo.');
+      if (!conexao.porta) status('Placa preparada! ✔ Clique em "Conectar placa" e escolha a porta de novo.');
     }, 3000);
     progresso(1); setTimeout(() => progresso(0), 2000);
   } catch (e) {
     progresso(0);
     if (e && e.name === 'NotFoundError') status('Nenhuma porta escolhida');
-    else { status('Falha na instalação'); mostrarErro(((e && e.message) || String(e)) + '\nDica: segure o botão BOOT, aperte e solte RESET, solte o BOOT e tente de novo.'); }
+    else { status('Não foi possível preparar a placa'); mostrarErro(((e && e.message) || String(e)) + '\nDica: segure o botão BOOT, aperte e solte RESET, solte o BOOT e tente de novo.'); }
   } finally {
     try { if (transporte) await transporte.disconnect(); } catch (e) {}
     bt.disabled = false; $('btEnviar').disabled = false;
