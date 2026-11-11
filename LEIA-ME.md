@@ -20,6 +20,23 @@ Endereço: https://franpastori.github.io/mannanauta-blocos-/
 5. O que o programa escrever aparece na aba **Monitor serial**.
 6. Com a placa conectada, o mesmo botão vira **Desconectar placa**.
 
+## Versão com simulador
+
+Em **https://franpastori.github.io/mannanauta-blocos-/simulador/** fica uma cópia do editor com uma
+**placa mannaNAUTA virtual**, no estilo do simulador do micro:bit. O programa roda na hora, no próprio
+navegador (também em tablet e celular), sem precisar da placa:
+
+- matriz de LEDs, botões de **TOQUE** (mãos) e **BOOT** clicáveis na placa desenhada;
+- inclinação (arrastando a placa ou pelas barras), sacudir, passos e temperatura;
+- controles automáticos para as entradas usadas no programa: leitura analógica, pinos digitais,
+  botões, ultrassônico e DHT11;
+- saídas mostradas no painel: pinos, PWM, servo e som (pelo alto-falante do computador);
+- página web da placa num celular desenhado e valores enviados ao Blynk.
+
+A simulação recomeça sozinha sempre que os blocos mudam. A versão com simulador também conecta e envia
+para a placa de verdade, igual à versão principal. Os arquivos ficam na pasta `simulador/`
+(`js/gerador-sim.js` traduz os blocos para o simulador e `js/simulador.js` é a placa virtual).
+
 ## Pastas
 
 | Arquivo | O que é |

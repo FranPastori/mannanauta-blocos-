@@ -1,0 +1,103 @@
+/* Identidade visual manna team */
+:root {
+  --preto:#000000; --ciano:#1CD3F7; --laranja:#FFA300; --rosa:#EF466E; --verde:#44AF69;
+  --azul:#1589C6; --azul-escuro:#076CA9; --azul-claro:#CCE2F7;
+  --fundo:#F5F9FD; --borda:#DCE7F2; --texto:#111418;
+}
+* { box-sizing:border-box; }
+html, body { margin:0; height:100%; font-family:'Nunito', system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; color:var(--texto); }
+body { display:flex; flex-direction:column; background:#fff; }
+header { display:flex; align-items:center; gap:8px; padding:10px 14px 8px; background:#fff; flex-wrap:wrap; }
+.marca { display:flex; align-items:center; gap:10px; margin-right:10px; }
+.marca img { height:26px; width:auto; display:block; }
+.marca .produto { font-weight:900; font-size:15px; padding:3px 10px 4px; border-radius:999px; background:var(--preto); color:#fff; letter-spacing:.2px; }
+.pontos { height:10px; margin:0 14px 2px; background:
+    radial-gradient(circle at 5px 5px, var(--cor-ponto, #1589C6) 4px, transparent 4.6px) 0 0 / 16px 10px repeat-x;
+    -webkit-mask: linear-gradient(90deg, #000, #000); position:relative; }
+.pontos::before { content:""; position:absolute; inset:0;
+    background:linear-gradient(90deg, #CCE2F7, #72BCE4 30%, #1B98D4 60%, #076CA9);
+    -webkit-mask: radial-gradient(circle at 5px 5px, #000 4px, transparent 4.6px) 0 0 / 16px 10px repeat-x;
+            mask: radial-gradient(circle at 5px 5px, #000 4px, transparent 4.6px) 0 0 / 16px 10px repeat-x; }
+.pontos { background:none; }
+a.botao { text-decoration:none; display:inline-block; }
+button, .botao { font:inherit; font-size:14px; font-weight:800; border:2px solid var(--borda); border-radius:999px; padding:6px 14px; cursor:pointer; background:#fff; color:var(--texto); }
+button:hover, .botao:hover { border-color:var(--azul); color:var(--azul-escuro); }
+button.principal { background:var(--azul); border-color:var(--azul); color:#fff; }
+button.principal:hover { background:var(--azul-escuro); border-color:var(--azul-escuro); color:#fff; }
+button:disabled { opacity:.5; cursor:default; }
+#btConfig { padding:6px 10px; }
+.espaco { flex:1; }
+#status { font-size:13px; font-weight:700; color:#5b6672; }
+main { flex:1; display:flex; min-height:0; border-top:1px solid var(--borda); }
+#areaBlocos { flex:1; min-width:0; }
+aside { width:30%; min-width:240px; max-width:460px; display:flex; flex-direction:column; border-left:1px solid var(--borda); background:var(--fundo); }
+.tituloPainel { padding:10px 14px; font-weight:800; font-size:14px; background:#fff; border-bottom:1px solid var(--borda); box-shadow: inset 0 -3px 0 var(--rosa); }
+.painel { flex:1; overflow:auto; background:#0b1118; }
+pre { margin:0; padding:12px; font-size:12.5px; line-height:1.45; white-space:pre; font-family: ui-monospace, Menlo, Consolas, monospace; }
+#monitor { background:#0b1118; color:#7fe3a4; min-height:100%; }
+.barraPainel { display:flex; gap:6px; padding:8px; border-top:1px solid var(--borda); background:#fff; flex-wrap:wrap; }
+.barraPainel button { font-size:13px; padding:5px 12px; }
+#aviso { display:none; background:#FFF6E0; color:#6b4500; padding:8px 14px; font-size:13px; font-weight:700; border-top:1px solid #FFE1A3; }
+#progresso { height:4px; background:transparent; }
+#progresso div { height:100%; width:0; background:linear-gradient(90deg, var(--ciano), var(--azul)); transition:width .2s; }
+dialog { border:0; border-radius:16px; padding:20px; max-width:420px; font-family:inherit; }
+dialog p { font-size:14px; }
+dialog h2 { margin-top:0; font-size:19px; font-weight:900; }
+dialog input { width:100%; padding:9px 12px; font:inherit; font-size:14px; border:2px solid var(--borda); border-radius:10px; }
+dialog input:focus { outline:none; border-color:var(--azul); }
+dialog .acoes { display:flex; justify-content:flex-end; gap:8px; margin-top:14px; }
+/* Caixa de categorias do Blockly */
+.blocklyToolboxDiv, .blocklyToolbox { background:var(--fundo) !important; font-family:'Nunito', sans-serif !important; }
+.blocklyTreeLabel { font-family:'Nunito', sans-serif !important; font-weight:800; font-size:14px !important; }
+.blocklyTreeRow { border-radius:0 999px 999px 0; margin-right:6px; height:32px !important; line-height:32px !important; }
+header button { white-space:nowrap; }
+@media (max-width: 760px) { main { flex-direction:column; } aside { width:100%; max-width:none; height:38%; border-left:0; border-top:1px solid var(--borda); } .marca .produto { display:none; } }
+
+/* ------------------------------ Simulador ------------------------------ */
+.marca .selo { font-weight:900; font-size:12px; padding:3px 9px 4px; border-radius:999px; background:var(--laranja); color:#000; }
+aside { width:34%; min-width:330px; max-width:520px; }
+.simTitulo { display:flex; align-items:center; justify-content:space-between; gap:8px; padding:6px 10px 6px 14px; }
+.simBotoes { display:flex; gap:6px; }
+.simBotoes button { font-size:13px; padding:4px 11px; }
+.simBotoes .simRodar { background:var(--verde); border-color:var(--verde); color:#fff; }
+.simBotoes .simRodar.parado { background:var(--azul); border-color:var(--azul); }
+.simArea { flex:1 1 60%; overflow:auto; background:var(--fundo); min-height:0; }
+#simPalco { perspective:700px; display:flex; justify-content:center; padding:10px 0 4px; }
+#simPlaca { width:215px; transition:transform .15s ease-out; transform-style:preserve-3d; touch-action:none; cursor:grab; }
+#simPlaca svg { width:100%; height:auto; display:block; filter: drop-shadow(0 6px 10px rgba(7,108,169,.25)); }
+#simPlaca .toque { cursor:pointer; }
+#simPlaca .toque.ativo circle.anel { fill:#FFA300; }
+#simPlaca .boot { cursor:pointer; }
+#simPlaca .boot.ativo rect { fill:#EF466E; }
+#simControles { padding:4px 12px 10px; display:flex; flex-direction:column; gap:8px; }
+.simSecao { font-weight:900; font-size:13px; color:#3b4652; margin:4px 0 2px; }
+.ctl { background:#fff; border:1px solid var(--borda); border-radius:12px; padding:8px 10px; font-size:13px; font-weight:700; }
+.ctl label { display:flex; align-items:center; gap:8px; justify-content:space-between; }
+.ctl input[type=range] { flex:1; accent-color:var(--azul); min-width:90px; }
+.ctl .val { min-width:46px; text-align:right; font-variant-numeric:tabular-nums; color:var(--azul-escuro); }
+.ctl .linha { display:flex; gap:6px; flex-wrap:wrap; margin-top:4px; }
+.ctl button { font-size:12px; padding:4px 10px; }
+.ctl button.on { background:var(--verde); border-color:var(--verde); color:#fff; }
+.saidas { display:flex; flex-wrap:wrap; gap:6px; }
+.chip { display:flex; align-items:center; gap:6px; background:#fff; border:1px solid var(--borda); border-radius:999px; padding:4px 10px; font-size:12px; font-weight:800; }
+.chip .luz { width:12px; height:12px; border-radius:50%; background:#cfd8e3; }
+.chip .luz.on { background:#ff4d4d; box-shadow:0 0 8px #ff4d4d; }
+.chip svg { width:22px; height:22px; }
+.simVazio { font-size:12px; color:#6b7782; font-weight:700; }
+#simCelular { display:flex; justify-content:center; padding:4px 12px 12px; }
+.celular { width:230px; border:8px solid #111; border-radius:26px; background:#F5F9FD; overflow:hidden; }
+.celularTopo { display:flex; justify-content:space-between; background:#111; color:#fff; font-size:10px; padding:2px 8px 5px; font-weight:700; }
+.celCab { background:#fff; padding:10px 12px 6px; border-bottom:1px solid var(--borda); }
+.celMarca { font-weight:900; font-size:10px; color:var(--azul-escuro); }
+#celTitulo { font-weight:900; font-size:17px; }
+.celPontos { height:8px; margin-top:6px; background:radial-gradient(circle at 4px 4px,#1589C6 3px,transparent 3.6px) 0 0/12px 8px repeat-x; }
+#celCards { display:grid; grid-template-columns:1fr 1fr; gap:8px; padding:10px; min-height:60px; }
+.celCard { background:#fff; border-radius:12px; padding:8px; box-shadow:0 1px 3px rgba(0,0,0,.08); border-top:5px solid #1CD3F7; }
+.celCard:nth-child(4n+2){border-color:#FFA300}.celCard:nth-child(4n+3){border-color:#EF466E}.celCard:nth-child(4n+4){border-color:#44AF69}
+.celCard .n { font-size:11px; font-weight:700; color:#5b6672; }
+.celCard .v { font-size:20px; font-weight:900; word-break:break-word; }
+#simBlynk { padding:0 12px 12px; }
+#blynkValores { display:flex; flex-wrap:wrap; gap:6px; }
+.monitorTitulo { box-shadow:none; border-top:1px solid var(--borda); }
+.monitorPainel { flex:0 0 20%; min-height:90px; }
+@media (max-width: 760px) { aside { height:60%; } #simPlaca { width:190px; } }

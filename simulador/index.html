@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>mannaNAUTA Blocos · Simulador</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@500;700;800;900&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/blockly@11.2.2/blockly_compressed.js"></script>
+<script src="https://unpkg.com/blockly@11.2.2/blocks_compressed.js"></script>
+<script src="https://unpkg.com/blockly@11.2.2/msg/pt-br.js"></script>
+<link rel="stylesheet" href="css/estilo.css">
+</head>
+<body>
+<header>
+  <div class="marca"><img src="img/logo-manna-team.png" alt="manna team"><span class="produto">NAUTA Blocos</span><span class="selo">simulador</span></div>
+  <button id="btNovo" title="Começar um programa novo">Novo</button>
+  <label class="botao" title="Abrir um projeto salvo">Abrir<input id="arquivo" type="file" accept=".json,.manna" hidden></label>
+  <button id="btSalvar" title="Baixar o projeto">Salvar</button>
+  <a class="botao" href="../" title="Abrir a versão sem simulador">Sem simulador</a>
+  <span class="espaco"></span>
+  <span id="status">Pronto</span>
+  <button id="btConectar" title="Conecta a placa pelo cabo USB (e prepara a placa, se for preciso)">Conectar placa</button>
+  <button id="btEnviar" class="principal">Enviar para a placa</button>
+</header>
+<div class="pontos" aria-hidden="true"></div>
+<div id="progresso"><div></div></div>
+<div id="aviso"></div>
+<main>
+  <div id="areaBlocos"></div>
+  <aside>
+    <div class="tituloPainel simTitulo">
+      <span>Simulador</span>
+      <span class="simBotoes">
+        <button id="btSimular" class="simRodar" title="Rodar o programa no simulador">■ Parar</button>
+        <button id="btSimReiniciar" title="Recomeçar a simulação">↻</button>
+        <button id="btSom" title="Ligar/desligar o som do simulador">🔊</button>
+      </span>
+    </div>
+    <div class="simArea">
+      <div id="simPalco"><div id="simPlaca"></div></div>
+      <div id="simControles"></div>
+      <div id="simCelular" hidden>
+        <div class="celular">
+          <div class="celularTopo"><span id="celRede">Wi-Fi</span><span>http://192.168.4.1</span></div>
+          <div class="celularTela">
+            <div class="celCab"><div class="celMarca">manna team · mannaNAUTA</div><div id="celTitulo">mannaNAUTA</div><div class="celPontos"></div></div>
+            <div id="celCards"></div>
+          </div>
+        </div>
+      </div>
+      <div id="simBlynk" hidden><div class="simSecao">Painel do Blynk (simulado)</div><div id="blynkValores"></div></div>
+    </div>
+    <div class="tituloPainel monitorTitulo">Monitor serial</div>
+    <div class="painel monitorPainel"><pre id="monitor"></pre></div>
+    <div class="barraPainel">
+      <button id="btLimparMonitor">Limpar monitor</button>
+    </div>
+  </aside>
+</main>
+
+<dialog id="dlgInstalar">
+  <h2>Preparar a placa</h2>
+  <p id="txtInstalar"></p>
+  <p>Se não começar, segure o botão <b>BOOT</b>, aperte e solte <b>RESET</b>, solte o <b>BOOT</b> e tente de novo.</p>
+  <div class="acoes"><button id="btCancelarInst">Cancelar</button><button id="btConfirmarInst" class="principal">Preparar agora</button></div>
+</dialog>
+
+<script src="js/blocos.js"></script>
+<script src="js/fontes.js"></script>
+<script src="js/gerador.js"></script>
+<script src="js/caixa.js"></script>
+<script src="js/interface.js"></script>
+<script src="js/placa.js"></script>
+<script src="js/preparar.js"></script>
+<script src="js/gerador-sim.js"></script>
+<script src="js/simulador.js"></script>
+</body>
+</html>

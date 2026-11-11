@@ -19,6 +19,7 @@ header { display:flex; align-items:center; gap:8px; padding:10px 14px 8px; backg
     -webkit-mask: radial-gradient(circle at 5px 5px, #000 4px, transparent 4.6px) 0 0 / 16px 10px repeat-x;
             mask: radial-gradient(circle at 5px 5px, #000 4px, transparent 4.6px) 0 0 / 16px 10px repeat-x; }
 .pontos { background:none; }
+a.botao { text-decoration:none; display:inline-block; }
 button, .botao { font:inherit; font-size:14px; font-weight:800; border:2px solid var(--borda); border-radius:999px; padding:6px 14px; cursor:pointer; background:#fff; color:var(--texto); }
 button:hover, .botao:hover { border-color:var(--azul); color:var(--azul-escuro); }
 button.principal { background:var(--azul); border-color:var(--azul); color:#fff; }
