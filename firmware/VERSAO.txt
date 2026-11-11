@@ -1,0 +1,2 @@
+ESP32_GENERIC_S3.bin <- https://micropython.org/resources/firmware/ESP32_GENERIC_S3-20260824-v1.29.0.bin
+ESP32_GENERIC_S3-FLASH_4M.bin <- https://micropython.org/resources/firmware/ESP32_GENERIC_S3-FLASH_4M-20250415-v1.25.0.bin
