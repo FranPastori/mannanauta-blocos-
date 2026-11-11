@@ -155,11 +155,16 @@ Blockly.defineBlocksWithJsonArray([
   { type:'mn_numero', message0:'mostrar número %1 com %2', args0:[{type:'input_value',name:'N',check:'Number'},{type:'input_value',name:'COR',check:'Cor'}], previousStatement:null, nextStatement:null, colour:COR.matriz, inputsInline:true, tooltip:'Um algarismo de 0 a 9.' },
   { type:'mn_texto', message0:'mostrar texto %1 com %2 cada letra por %3 segundos', args0:[{type:'field_input',name:'T',text:'MANNA'},{type:'input_value',name:'COR',check:'Cor'},{type:'input_value',name:'S',check:'Number'}], previousStatement:null, nextStatement:null, colour:COR.matriz, inputsInline:true, tooltip:'Mostra letras (A–Z) e algarismos (0–9), um de cada vez.' },
   { type:'mn_simbolo', message0:'mostrar símbolo %1 com %2', args0:[{type:'field_dropdown',name:'S',options:[['?','?'],['!','!'],['#','#'],['@','@'],['$','$'],['%','%'],['(','('],[')',')'],['[','['],[']',']']]},{type:'input_value',name:'COR',check:'Cor'}], previousStatement:null, nextStatement:null, colour:COR.matriz, inputsInline:true },
+  { type:'mn_preparar_xy', message0:'preparar LED coluna %1 linha %2 com %3', args0:[{type:'input_value',name:'X',check:'Number'},{type:'input_value',name:'Y',check:'Number'},{type:'input_value',name:'COR',check:'Cor'}], previousStatement:null, nextStatement:null, colour:COR.matriz, inputsInline:true, tooltip:'Prepara o LED sem acender. Use "mostrar LEDs preparados" para acender tudo de uma vez.' },
+  { type:'mn_preparar_n', message0:'preparar LED número %1 com %2', args0:[{type:'input_value',name:'N',check:'Number'},{type:'input_value',name:'COR',check:'Cor'}], previousStatement:null, nextStatement:null, colour:COR.matriz, inputsInline:true, tooltip:'Prepara o LED (1 a 25) sem acender.' },
+  { type:'mn_preparar_limpar', message0:'apagar LEDs preparados', previousStatement:null, nextStatement:null, colour:COR.matriz, tooltip:'Apaga a preparação, sem mudar o que está aceso agora.' },
+  { type:'mn_mostrar', message0:'mostrar LEDs preparados', previousStatement:null, nextStatement:null, colour:COR.matriz, tooltip:'Acende de uma vez todos os LEDs preparados.' },
   { type:'mn_emocao', message0:'mostrar carinha %1 com %2', args0:[{type:'field_dropdown',name:'E',options:[['feliz =]','=]'],['triste =[','=['],['surpresa =O','=O'],['boca aberta =o','=o'],['confusa =s','=s'],['muito confusa =S','=S']]},{type:'input_value',name:'COR',check:'Cor'}], previousStatement:null, nextStatement:null, colour:COR.matriz, inputsInline:true },
 
   // Cores
   { type:'mn_cor', message0:'%1', args0:[{type:'field_dropdown',name:'COR',options:CORES_NOMEADAS}], output:'Cor', colour:COR.cor },
   { type:'mn_cor_rgb', message0:'cor vermelho %1 verde %2 azul %3', args0:[{type:'input_value',name:'R',check:'Number'},{type:'input_value',name:'G',check:'Number'},{type:'input_value',name:'B',check:'Number'}], output:'Cor', colour:COR.cor, inputsInline:true, tooltip:'Cada parte vai de 0 a 255.' },
+  { type:'mn_cor_hsv', message0:'cor matiz %1 saturação %2 %% brilho %3 %%', args0:[{type:'input_value',name:'H',check:'Number'},{type:'input_value',name:'S',check:'Number'},{type:'input_value',name:'V',check:'Number'}], output:'Cor', colour:COR.cor, inputsInline:true, tooltip:'Matiz de 0 a 360 (volta no círculo das cores); saturação e brilho de 0 a 100.' },
   { type:'mn_cor_arco', message0:'cor do arco-íris na posição %1', args0:[{type:'input_value',name:'P',check:'Number'}], output:'Cor', colour:COR.cor, inputsInline:true, tooltip:'Posição de 0 a 255: percorre todas as cores.' },
 
   // Sensor de movimento
@@ -168,6 +173,11 @@ Blockly.defineBlocksWithJsonArray([
   { type:'mn_angulo', message0:'inclinação %1 em graus', args0:[{type:'field_dropdown',name:'TIPO',options:[['para os lados','rol'],['para frente e para trás','arf']]}], output:'Number', colour:COR.sensor },
   { type:'mn_inclinada', message0:'placa inclinada %1 ?', args0:[{type:'field_dropdown',name:'DIR',options:[['para frente','1'],['para trás','2'],['para a direita','3'],['para a esquerda','4'],['nivelada (reta)','0']]}], output:'Boolean', colour:COR.sensor },
   { type:'mn_sacudida', message0:'placa sacudida?', output:'Boolean', colour:COR.sensor },
+  { type:'mn_sensibilidade', message0:'sensibilidade da sacudida %1', args0:[{type:'field_dropdown',name:'NIVEL',options:[['média','20'],['alta (sacudida leve)','8'],['baixa (sacudida forte)','40']]}], previousStatement:null, nextStatement:null, colour:COR.sensor },
+  { type:'mn_faixa_acel', message0:'faixa do acelerômetro %1', args0:[{type:'field_dropdown',name:'F',options:[['±2 g','2'],['±4 g','4'],['±8 g','8'],['±16 g','16']]}], previousStatement:null, nextStatement:null, colour:COR.sensor, tooltip:'Faixas maiores medem movimentos mais fortes, com menos detalhe.' },
+  { type:'mn_faixa_giro', message0:'faixa do giroscópio %1', args0:[{type:'field_dropdown',name:'F',options:[['±250 graus/s','250'],['±125 graus/s','125'],['±500 graus/s','500'],['±1000 graus/s','1000'],['±2000 graus/s','2000']]}], previousStatement:null, nextStatement:null, colour:COR.sensor },
+  { type:'mn_conectado', message0:'sensor conectado?', output:'Boolean', colour:COR.sensor },
+  { type:'mn_nome_sensor', message0:'nome do sensor', output:'String', colour:COR.sensor, tooltip:'Bom para escrever no monitor e conferir a placa.' },
   { type:'mn_temperatura', message0:'temperatura (°C)', output:'Number', colour:COR.sensor },
   { type:'mn_passos', message0:'número de passos', output:'Number', colour:COR.sensor, tooltip:'Conta passos quando a placa vai junto com quem anda.' },
   { type:'mn_zerar_passos', message0:'zerar contador de passos', previousStatement:null, nextStatement:null, colour:COR.sensor },
@@ -326,6 +336,10 @@ f['mn_limpar'] = () => { Cpp.usa.add('matriz'); return 'strip.clear();\n'; };
 f['mn_todos'] = (b) => `strip.setAllLedsColor(${cor(b)});\n`;
 f['mn_led_xy'] = (b) => { const c = cor(b); Cpp.usa.add('led'); return `mnLed(((int)(${v(b,'Y')}) - 1) * 5 + ((int)(${v(b,'X')}) - 1), ${c});\n`; };
 f['mn_led_n'] = (b) => { const c = cor(b); Cpp.usa.add('led'); return `mnLed((int)(${v(b,'N')}) - 1, ${c});\n`; };
+f['mn_preparar_xy'] = (b) => { const c = cor(b); Cpp.usa.add('preparar'); return `mnPreparar(((int)(${v(b,'Y')}) - 1) * 5 + ((int)(${v(b,'X')}) - 1), ${c});\n`; };
+f['mn_preparar_n'] = (b) => { const c = cor(b); Cpp.usa.add('preparar'); return `mnPreparar((int)(${v(b,'N')}) - 1, ${c});\n`; };
+f['mn_preparar_limpar'] = () => { Cpp.usa.add('matriz'); return 'strip.setAllLedsColorData((uint32_t)0);\n'; };
+f['mn_mostrar'] = () => { Cpp.usa.add('matriz'); return 'strip.show();\n'; };
 f['mn_letra'] = (b) => {
   const c = cor(b);
   let l = (b.getFieldValue('L') || 'A').trim().toUpperCase().charAt(0);
@@ -346,6 +360,7 @@ f['mn_desenho'] = (b) => {
 // Cores
 f['mn_cor'] = (b) => [b.getFieldValue('COR'), Cpp.ORDER_ATOMIC];
 f['mn_cor_rgb'] = (b) => { Cpp.usa.add('rgb'); return [`mnCorRGB(${v(b,'R')}, ${v(b,'G')}, ${v(b,'B')})`, Cpp.ORDER_ATOMIC]; };
+f['mn_cor_hsv'] = (b) => { Cpp.usa.add('matriz'); return [`strip.hsv2rgb((uint32_t)constrain((int)(${v(b,'H')}), 0, 360), (uint32_t)constrain((int)(${v(b,'S')}), 0, 100), (uint32_t)constrain((int)(${v(b,'V')}), 0, 100))`, Cpp.ORDER_ATOMIC]; };
 f['mn_cor_arco'] = (b) => { Cpp.usa.add('matriz'); return [`strip.Wheel((byte)((int)(${v(b,'P')}) & 0xFF))`, Cpp.ORDER_ATOMIC]; };
 
 // Sensor
@@ -355,6 +370,11 @@ f['mn_giro'] = (b) => { sensor('giro'); return [`mnGiro('${b.getFieldValue('EIXO
 f['mn_angulo'] = (b) => { sensor('angulo'); return [`mnAngulo(${b.getFieldValue('TIPO') === 'rol' ? 'true' : 'false'})`, Cpp.ORDER_ATOMIC]; };
 f['mn_inclinada'] = (b) => { sensor('inclinacao'); return [`(mnInclinacao() == ${b.getFieldValue('DIR')})`, Cpp.ORDER_ATOMIC]; };
 f['mn_sacudida'] = () => { sensor('sacudida'); return ['mnSacudida()', Cpp.ORDER_ATOMIC]; };
+f['mn_sensibilidade'] = (b) => { sensor('sacudida'); return `imu.enableWakeup(true, 0, ${b.getFieldValue('NIVEL')});\n`; };
+f['mn_faixa_acel'] = (b) => { sensor(); return `imu.setAccelRange(LSM6DS_ACCEL_RANGE_${b.getFieldValue('F')}_G);\n`; };
+f['mn_faixa_giro'] = (b) => { sensor(); return `imu.setGyroRange(LSM6DS_GYRO_RANGE_${b.getFieldValue('F')}_DPS);\n`; };
+f['mn_conectado'] = () => { sensor(); return ['imu.connected()', Cpp.ORDER_ATOMIC]; };
+f['mn_nome_sensor'] = () => { sensor(); return ['imu.variantName()', Cpp.ORDER_ATOMIC]; };
 f['mn_temperatura'] = () => { sensor(); return ['imu.readTemperature()', Cpp.ORDER_ATOMIC]; };
 f['mn_passos'] = () => { sensor('passos'); return ['(int)imu.readPedometer()', Cpp.ORDER_ATOMIC]; };
 f['mn_zerar_passos'] = () => { sensor('passos'); return 'imu.resetPedometer();\n'; };
@@ -375,7 +395,7 @@ function gerarPrograma(ws) {
     else soltos.push(topo);
   }
   const u = Cpp.usa;
-  if (u.has('led') || u.has('desenho') || u.has('texto')) u.add('matriz');
+  if (u.has('led') || u.has('desenho') || u.has('texto') || u.has('preparar')) u.add('matriz');
   if (u.has('inclinacao')) u.add('angulo');
   if (u.has('angulo')) u.add('acel');
 
@@ -402,6 +422,10 @@ function gerarPrograma(ws) {
   if (u.has('led')) aux.push(
 `void mnLed(int indice, uint32_t cor) {
   if (indice >= 0 && indice < LEDS_COUNT) strip.setLedColor(indice, cor);
+}`);
+  if (u.has('preparar')) aux.push(
+`void mnPreparar(int indice, uint32_t cor) {
+  if (indice >= 0 && indice < LEDS_COUNT) strip.setLedColorData(indice, cor);
 }`);
   if (u.has('desenho')) aux.push(
 `void mnDesenho(const char *pontos, uint32_t cor) {
@@ -511,12 +535,17 @@ const toolbox = {
       {kind:'block',type:'mn_led_xy',inputs:{X:sombraNum(3),Y:sombraNum(3),COR:sombraCor}},
       {kind:'block',type:'mn_led_n',inputs:{N:sombraNum(1),COR:sombraCor}},
       {kind:'block',type:'mn_todos',inputs:{COR:sombraCor}},
+      {kind:'block',type:'mn_preparar_xy',inputs:{X:sombraNum(1),Y:sombraNum(1),COR:sombraCor}},
+      {kind:'block',type:'mn_preparar_n',inputs:{N:sombraNum(1),COR:sombraCor}},
+      {kind:'block',type:'mn_mostrar'},
+      {kind:'block',type:'mn_preparar_limpar'},
       {kind:'block',type:'mn_limpar'},
       {kind:'block',type:'mn_brilho',inputs:{B:sombraNum(20)}}
     ]},
     { kind:'category', name:'Cores', colour:COR.cor, contents:[
       {kind:'block',type:'mn_cor'},
       {kind:'block',type:'mn_cor_rgb',inputs:{R:sombraNum(255),G:sombraNum(100),B:sombraNum(0)}},
+      {kind:'block',type:'mn_cor_hsv',inputs:{H:sombraNum(200),S:sombraNum(100),V:sombraNum(100)}},
       {kind:'block',type:'mn_cor_arco',inputs:{P:sombraNum(0)}}
     ]},
     { kind:'category', name:'Sensor de movimento', colour:COR.sensor, contents:[
@@ -527,7 +556,12 @@ const toolbox = {
       {kind:'block',type:'mn_giro'},
       {kind:'block',type:'mn_temperatura'},
       {kind:'block',type:'mn_passos'},
-      {kind:'block',type:'mn_zerar_passos'}
+      {kind:'block',type:'mn_zerar_passos'},
+      {kind:'block',type:'mn_sensibilidade'},
+      {kind:'block',type:'mn_faixa_acel'},
+      {kind:'block',type:'mn_faixa_giro'},
+      {kind:'block',type:'mn_conectado'},
+      {kind:'block',type:'mn_nome_sensor'}
     ]},
     { kind:'category', name:'Monitor serial', colour:COR.serial, contents:[
       {kind:'block',type:'mn_escrever',inputs:{V:{shadow:{type:'text',fields:{TEXT:'Olá!'}}}}},

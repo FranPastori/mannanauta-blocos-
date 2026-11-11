@@ -21,6 +21,10 @@ void mnLed(int indice, uint32_t cor) {
   if (indice >= 0 && indice < LEDS_COUNT) strip.setLedColor(indice, cor);
 }
 
+void mnPreparar(int indice, uint32_t cor) {
+  if (indice >= 0 && indice < LEDS_COUNT) strip.setLedColorData(indice, cor);
+}
+
 void mnDesenho(const char *pontos, uint32_t cor) {
   strip.setAllLedsColorData((uint32_t)0);
   for (int i = 0; i < 25 && pontos[i]; i++) {
@@ -121,6 +125,16 @@ void loop() {
     delay(1);
   }
   Serial.println(((float)(((long)(10) % (long)(3))) / (sqrt(ceil(3.2)))));
+  strip.setAllLedsColorData((uint32_t)0);
+  mnPreparar(((int)(3) - 1) * 5 + ((int)(2) - 1), strip.hsv2rgb((uint32_t)constrain((int)(400), 0, 360), (uint32_t)constrain((int)(50), 0, 100), (uint32_t)constrain((int)(100), 0, 100)));
+  mnPreparar((int)(7) - 1, 0xFF0000);
+  strip.show();
+  imu.enableWakeup(true, 0, 8);
+  imu.setAccelRange(LSM6DS_ACCEL_RANGE_16_G);
+  imu.setGyroRange(LSM6DS_GYRO_RANGE_2000_DPS);
+  if (imu.connected()) {
+    Serial.println(imu.variantName());
+  }
   strip.clear();
   delay((unsigned long)((0.5) * 1000));
 }
