@@ -200,7 +200,12 @@ function criarS(id) {
     parar: (p) => { somParar(); delete saidas['b' + p]; mostrarSaidas(saidas); },
     tocar: async (p, f, s) => { som.tom(p, f); try { await S.esperar(Number(s) * 1000); } finally { som.parar(p); } }
   };
-  const botoes = { toque: (lado) => !!est.toque[lado], boot: () => !!est.boot };
+  const botoes = {
+    toque: (lado) => !!est.toque[lado],
+    // valor bruto simulado: em repouso ~25000, tocado ~80000 (com uma pequena variação)
+    leitura: (lado) => (est.toque[lado] ? 80000 : 25000) + Math.floor(Math.random() * 600),
+    boot: () => !!est.boot
+  };
 
   // ---- rede, Blynk e página web
   const rede = {
@@ -262,6 +267,7 @@ function criarS(id) {
       if (ms === 0) await new Promise((r) => setTimeout(r, 0));
     },
     millis: () => Math.round(performance.now() - t0),
+    str: (v) => formatarPy(v),
     print: (...vals) => { if (ativo()) noMonitor(vals.map(formatarPy).join(' ') + '\n'); },
     resto: (a, b) => { a = Number(a); b = Number(b) || 1; return ((a % b) + b) % b; },
     aleatorio: (a, b) => { a = Math.trunc(a); b = Math.trunc(b); if (a > b) [a, b] = [b, a]; return a + Math.floor(Math.random() * (b - a + 1)); },
@@ -401,7 +407,7 @@ function montarControles(ws) {
     area.append(s);
   }
 
-  if (tipos.has('mn_toque') || tipos.has('mn_boot')) {
+  if (tipos.has('mn_toque') || tipos.has('mn_toque_valor') || tipos.has('mn_boot')) {
     const d = document.createElement('div'); d.className = 'simVazio';
     d.textContent = '👉 Clique e segure nos botões de TOQUE (mãos) ou no BOOT da placa.';
     area.append(d);

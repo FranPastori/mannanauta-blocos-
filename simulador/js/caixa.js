@@ -54,6 +54,7 @@ const toolbox = {
     ]},
     { kind:'category', name:'Botões da placa', colour:COR.botoes, contents:[
       {kind:'block',type:'mn_toque'},
+      {kind:'block',type:'mn_toque_valor'},
       {kind:'block',type:'mn_boot'}
     ]},
     { kind:'category', name:'Pinos', colour:COR.pinos, contents:[
@@ -93,7 +94,8 @@ const toolbox = {
     { kind:'category', name:'Monitor serial', colour:COR.serial, contents:[
       {kind:'block',type:'mn_escrever',inputs:{V:{shadow:{type:'text',fields:{TEXT:'Olá!'}}}}},
       {kind:'block',type:'mn_escrever_dois',inputs:{A:{shadow:{type:'text',fields:{TEXT:'valor:'}}},B:sombraNum(0)}},
-      {kind:'block',type:'text'}
+      {kind:'block',type:'text'},
+      {kind:'block',type:'text_join',extraState:{itemCount:2},inputs:{ADD0:{shadow:{type:'text',fields:{TEXT:'Valor: '}}}}}
     ]},
     { kind:'category', name:'Operadores', colour:COR.matematica, contents:[
       {kind:'block',type:'math_number'},

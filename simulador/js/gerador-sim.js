@@ -82,6 +82,11 @@ g['controls_flow_statements'] = (b) => {
 g['variables_get'] = (b) => [jvar(b), Js.ORDER_ATOMIC];
 g['variables_set'] = (b) => `${jvar(b)} = ${jv(b,'VALUE')};\n`;
 g['math_change'] = (b) => `${jvar(b)} = Number(${jvar(b)}) + Number(${jv(b,'DELTA')});\n`;
+g['text_join'] = (b) => {
+  const partes = [];
+  for (let i = 0; i < (b.itemCount_ || 0); i++) partes.push(`S.str(${jv(b, 'ADD' + i, Js.ORDER_NONE, '""')})`);
+  return [partes.length ? partes.join(' + ') : '""', Js.ORDER_ADD];
+};
 g['text'] = (b) => [JSON.stringify(b.getFieldValue('TEXT')), Js.ORDER_ATOMIC];
 
 // Eventos e controle
@@ -150,6 +155,7 @@ g['mn_distancia'] = (b) => [`S.pinos.distancia(${b.getFieldValue('TRIG')}, ${b.g
 g['mn_botao'] = (b) => [`S.pinos.botao(${b.getFieldValue('PINO')})`, Js.ORDER_ATOMIC];
 g['mn_dht'] = (b) => [`S.pinos.dht(${b.getFieldValue('PINO')}, ${jcampo(b,'TIPO')})`, Js.ORDER_ATOMIC];
 g['mn_toque'] = (b) => [`S.botoes.toque(${jcampo(b,'LADO')})`, Js.ORDER_ATOMIC];
+g['mn_toque_valor'] = (b) => [`S.botoes.leitura(${jcampo(b,'LADO')})`, Js.ORDER_ATOMIC];
 g['mn_boot'] = () => ['S.botoes.boot()', Js.ORDER_ATOMIC];
 
 // Operadores extras

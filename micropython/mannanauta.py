@@ -5,7 +5,7 @@
 # Também traz: leitura analógica, Wi-Fi, envio de dados para o Blynk e uma página web própria da placa.
 # Os desenhos de letras, números, símbolos e carinhas são os mesmos da biblioteca original.
 
-VERSAO = "7"
+VERSAO = "8"
 
 import math
 import time
@@ -481,7 +481,7 @@ def distancia(trig, echo):
 _toques = {}
 
 
-def botao_toque(lado):
+def _toque(lado):
     from machine import TouchPad
     pino = 7 if lado == "esquerdo" else 6
     t = _toques.get(pino)
@@ -489,6 +489,16 @@ def botao_toque(lado):
         tp = TouchPad(Pin(pino))
         base = tp.read()
         t = _toques[pino] = [tp, base]
+    return t
+
+
+def leitura_toque(lado):
+    # Valor bruto do sensor de toque, como o touchRead() do Arduino
+    return _toque(lado)[0].read()
+
+
+def botao_toque(lado):
+    t = _toque(lado)
     valor = t[0].read()
     base = t[1]
     tocado = abs(valor - base) > base * 0.15

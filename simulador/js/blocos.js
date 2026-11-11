@@ -107,6 +107,7 @@ Blockly.defineBlocksWithJsonArray([
 
   // Botões da placa
   { type:'mn_toque', message0:'botão de toque %1 tocado?', args0:[{type:'field_dropdown',name:'LADO',options:[['esquerdo','esquerdo'],['direito','direito']]}], output:'Boolean', colour:COR.botoes, tooltip:'Os botões de toque ficam nas mãos do astronauta (esquerdo = GPIO7, direito = GPIO6).' },
+  { type:'mn_toque_valor', message0:'leitura do toque %1', args0:[{type:'field_dropdown',name:'LADO',options:[['esquerdo','esquerdo'],['direito','direito']]}], output:'Number', colour:COR.botoes, tooltip:'Valor do sensor de toque, como o touchRead do Arduino (esquerdo = GPIO7, direito = GPIO6). No ESP32-S3 o valor sobe quando você toca.' },
   { type:'mn_boot', message0:'botão BOOT pressionado?', output:'Boolean', colour:COR.botoes, tooltip:'Botão BOOT/Usuário da placa (GPIO0).' },
 
   // Internet (IoT)
@@ -147,7 +148,7 @@ const RECOLORIR = {
   controle: ['controls_if', 'controls_repeat_ext', 'controls_whileUntil', 'controls_for', 'controls_flow_statements'],
   matematica: ['math_number', 'math_arithmetic', 'math_random_int', 'math_modulo', 'math_round', 'math_single',
                'logic_compare', 'logic_operation', 'logic_negate', 'logic_boolean'],
-  serial: ['text'],
+  serial: ['text', 'text_join'],
   variavel: ['variables_get', 'variables_set', 'math_change']
 };
 for (const [categoria, tipos] of Object.entries(RECOLORIR)) {

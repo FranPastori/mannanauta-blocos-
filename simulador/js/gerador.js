@@ -4,7 +4,7 @@ Py.ORDER_ATOMIC = 0; Py.ORDER_EXP = 3; Py.ORDER_UNARY = 4; Py.ORDER_MULT = 5; Py
 Py.ORDER_REL = 11; Py.ORDER_NOT = 12; Py.ORDER_AND = 13; Py.ORDER_OR = 14; Py.ORDER_NONE = 99;
 Py.INDENT = '    ';
 Py.addReservedWords('False,None,True,and,as,assert,break,class,continue,def,del,elif,else,except,finally,for,from,global,if,import,in,is,lambda,nonlocal,not,or,pass,raise,return,try,while,with,yield,' +
-  'time,math,random,print,int,float,str,range,abs,round,matriz,sensor,Matriz,Sensor,contar,mapear,limitar,pino_modo,escrever_digital,ler_digital,escrever_pwm,tom,sem_tom,tocar,servo,distancia,botao,botao_toque,botao_boot,temperatura_ar,umidade_ar,dht,cor_rgb,cor_arco,cor_hsv,mannanauta');
+  'time,math,random,print,int,float,str,range,abs,round,matriz,sensor,Matriz,Sensor,contar,mapear,limitar,pino_modo,escrever_digital,ler_digital,escrever_pwm,tom,sem_tom,tocar,servo,distancia,botao,botao_toque,leitura_toque,botao_boot,temperatura_ar,umidade_ar,dht,cor_rgb,cor_arco,cor_hsv,mannanauta');
 
 Py.init = function (ws) {
   Object.getPrototypeOf(this).init.call(this, ws);
@@ -103,6 +103,11 @@ f['controls_flow_statements'] = (b) => {
 f['variables_get'] = (b) => [Py.nomeVar(b.getFieldValue('VAR')), Py.ORDER_ATOMIC];
 f['variables_set'] = (b) => `${Py.nomeVar(b.getFieldValue('VAR'))} = ${v(b,'VALUE')}\n`;
 f['math_change'] = (b) => `${Py.nomeVar(b.getFieldValue('VAR'))} += ${v(b,'DELTA')}\n`;
+f['text_join'] = (b) => {
+  const partes = [];
+  for (let i = 0; i < (b.itemCount_ || 0); i++) partes.push(`str(${v(b, 'ADD' + i, Py.ORDER_NONE, '""')})`);
+  return [partes.length ? partes.join(' + ') : '""', Py.ORDER_ADD];
+};
 f['text'] = (b) => [JSON.stringify(b.getFieldValue('TEXT')), Py.ORDER_ATOMIC];
 
 // Eventos e controle
@@ -172,6 +177,7 @@ f['mn_servo'] = (b) => `servo(${b.getFieldValue('PINO')}, ${v(b,'A',Py.ORDER_NON
 f['mn_distancia'] = (b) => [`distancia(${b.getFieldValue('TRIG')}, ${b.getFieldValue('ECHO')})`, Py.ORDER_ATOMIC];
 f['mn_dht'] = (b) => [`${b.getFieldValue('TIPO')}(${b.getFieldValue('PINO')})`, Py.ORDER_ATOMIC];
 f['mn_toque'] = (b) => [`botao_toque("${b.getFieldValue('LADO')}")`, Py.ORDER_ATOMIC];
+f['mn_toque_valor'] = (b) => [`leitura_toque("${b.getFieldValue('LADO')}")`, Py.ORDER_ATOMIC];
 f['mn_boot'] = () => ['botao_boot()', Py.ORDER_ATOMIC];
 f['mn_botao'] = (b) => [`botao(${b.getFieldValue('PINO')})`, Py.ORDER_ATOMIC];
 
