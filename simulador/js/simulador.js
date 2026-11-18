@@ -275,7 +275,7 @@ function criarS(id) {
         };
       };
       window.mnGreenLife = async (url, corpo) => {
-        if (!simAtivo) throw new Error('simulação parada');
+        if (execucao !== id) throw new Error('simulação parada');
         if (corpo) {
           if ('displayHumidity' in corpo) { gl.matriz = !!corpo.displayHumidity; if (!gl.matriz) matriz.limpar(); }
           if (corpo.calibration === 'next') {
