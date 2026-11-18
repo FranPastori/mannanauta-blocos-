@@ -102,3 +102,9 @@ aside { width:34%; min-width:330px; max-width:520px; }
 .monitorTitulo { box-shadow:none; border-top:1px solid var(--borda); }
 .monitorPainel { flex:0 0 20%; min-height:90px; }
 @media (max-width: 760px) { aside { height:60%; } #simPlaca { width:190px; } }
+
+/* Página GreenLife dentro do celular simulado */
+.celGL { display:none; width:214px; height:400px; overflow:hidden; }
+.celGL iframe { width:360px; height:672px; border:0; transform:scale(.594); transform-origin:0 0; background:#fff; }
+#simCelular.greenlife .celGL { display:block; }
+#simCelular.greenlife .celCab, #simCelular.greenlife #celCards { display:none; }

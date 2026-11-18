@@ -120,6 +120,13 @@ async function carregarBiblioteca() {
   return bibliotecaTexto;
 }
 
+// Página da planta falante (GreenLife), guardada como arquivo na placa
+async function carregarGreenLife() {
+  const r = await fetch('../micropython/greenlife.html', { cache: 'no-cache' });
+  if (!r.ok) throw new Error('Não encontrei o arquivo micropython/greenlife.html');
+  return r.text();
+}
+
 // Roda o main.py sem reiniciar a placa (reiniciar derruba a conexão USB desta placa).
 // Fica no modo raw; o próximo envio interrompe com Ctrl-C.
 const CODIGO_RODAR = "import sys\nsys.modules.pop('mannanauta', None)\ntry:\n _f = open('main.py')\nexcept OSError:\n _f = None\nif _f:\n _c = _f.read()\n _f.close()\n exec(_c, {'__name__': '__main__'})\n";
@@ -216,6 +223,14 @@ $('btEnviar').onclick = async () => {
       status('Preparando a placa…');
       await gravarArquivo('mannanauta.py', lib);
       reiniciar = true; // biblioteca nova: reinicia a placa para começar do zero
+    }
+    if (codigoAtual.includes('greenlife_iniciar')) {
+      const pagina = await carregarGreenLife();
+      const [tam] = await executar(`try:\n import os\n print(os.stat('greenlife.html')[6])\nexcept Exception:\n print(-1)`);
+      if (reiniciar || parseInt(tam, 10) !== enc.encode(pagina).length) {
+        status('Gravando a página GreenLife…');
+        await gravarArquivo('greenlife.html', pagina);
+      }
     }
     status('Enviando o programa…');
     await gravarArquivo('main.py', codigoAtual);

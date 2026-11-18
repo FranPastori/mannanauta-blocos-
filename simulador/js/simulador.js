@@ -250,7 +250,52 @@ function criarS(id) {
         c.append(a, b); cards.append(c);
       }
     },
-    endereco: () => (rede.ap ? 'http://192.168.4.1' : (rede.sta ? 'http://192.168.0.50' : '(sem rede)'))
+    endereco: () => (rede.ap ? 'http://192.168.4.1' : (rede.sta ? 'http://192.168.0.50' : '(sem rede)')),
+    // Página pronta GreenLife: a mesma página da placa, dentro do celular simulado
+    greenlife: async (solo, dht) => {
+      if (!rede.ap && !rede.sta) await rede.criar('GreenLife');
+      const gl = { seco: 3000, molhado: 1300, calibrado: false, etapa: '', matriz: false, secoNovo: 3000 };
+      const status = () => {
+        const leitura = pinos.analogico(solo);
+        const ok = leitura > 100;
+        const h = Math.trunc(limitarNum(Math.trunc((leitura - gl.seco) * 100 / (gl.molhado - gl.seco)), 0, 100));
+        if (gl.matriz && ok) {
+          const f = h < 25 ? 0 : h < 45 ? 1 : h < 70 ? 2 : h < 90 ? 3 : 4;
+          const cor = [0xD65B4F, 0xE79A45, 0x4AAA63, 0x4E9BD6, 0x557AC8][f];
+          const acesos = Math.trunc((h * 25 + 50) / 100);
+          for (let i = 0; i < 25; i++) matriz.preparar(24 - i, i < acesos ? cor : 0);
+          matriz.mostrar();
+        }
+        const temDht = dht >= 0;
+        return {
+          soilAvailable: ok, humidity: ok ? h : null, calibrated: gl.calibrado, displayHumidity: gl.matriz,
+          calibrationStage: gl.etapa, dhtAvailable: temDht,
+          temperature: temDht ? Number(pinos.dht(dht, 'temperatura_ar')) : null,
+          airHumidity: temDht ? Number(pinos.dht(dht, 'umidade_ar')) : null
+        };
+      };
+      window.mnGreenLife = async (url, corpo) => {
+        if (!simAtivo) throw new Error('simulação parada');
+        if (corpo) {
+          if ('displayHumidity' in corpo) { gl.matriz = !!corpo.displayHumidity; if (!gl.matriz) matriz.limpar(); }
+          if (corpo.calibration === 'next') {
+            const leitura = pinos.analogico(solo);
+            if (gl.etapa === 'dry') { gl.secoNovo = leitura; gl.etapa = 'wet'; S.print('GreenLife: leitura seco =', leitura); }
+            else if (gl.etapa === 'wet') {
+              S.print('GreenLife: leitura molhado =', leitura);
+              if (Math.abs(gl.secoNovo - leitura) < 300) gl.etapa = 'error';
+              else { gl.seco = gl.secoNovo; gl.molhado = leitura; gl.calibrado = true; gl.etapa = 'done'; }
+            } else gl.etapa = 'dry';
+          }
+        }
+        return status();
+      };
+      document.getElementById('simCelular').hidden = false;
+      document.getElementById('simCelular').classList.add('greenlife');
+      const f = document.getElementById('celGreenLife');
+      if (!f.getAttribute('src')) f.setAttribute('src', '../micropython/greenlife.html');
+      S.print('Página GreenLife ligada! No celular, entre na rede da placa e abra:', pagina.endereco());
+    }
   };
 
   const S = {
@@ -375,11 +420,11 @@ function montarControles(ws) {
   }
 
   // Entradas
-  const analog = pinosDe('mn_analogico');
+  const analog = [...new Set([...pinosDe('mn_analogico'), ...pinosDe('mn_greenlife', 'SOLO')])];
   const digitais = pinosDe('mn_digital_ler');
   const botoesP = pinosDe('mn_botao');
   const ultras = [...new Set(blocos.filter((b) => b.type === 'mn_distancia').map((b) => b.getFieldValue('TRIG') + '-' + b.getFieldValue('ECHO')))];
-  const dhts = pinosDe('mn_dht');
+  const dhts = [...new Set([...pinosDe('mn_dht'), ...pinosDe('mn_greenlife', 'DHT').filter((p) => p !== '-1')])];
   if (analog.length || digitais.length || botoesP.length || ultras.length || dhts.length) secao('Entradas');
   for (const p of analog) area.append(barra(`Analógico pino ${p}`, 0, 4095, 1, () => est.analogico[p] ?? 2048, (v) => { est.analogico[p] = v; }).el);
   for (const k of ultras) area.append(barra(`Ultrassônico (${k.replace('-', '/')})`, 2, 400, 1, () => est.distancia[k] ?? 50, (v) => { est.distancia[k] = v; }, ' cm').el);
@@ -430,6 +475,8 @@ function pararSimulacao() {
 function limparPlacaVirtual() {
   for (let i = 0; i < 25; i++) { const el = document.getElementById('led' + i); if (el) { el.setAttribute('fill', '#2a3550'); el.style.filter = ''; } }
   document.getElementById('simCelular').hidden = true;
+  document.getElementById('simCelular').classList.remove('greenlife');
+  document.getElementById('celGreenLife').removeAttribute('src');
   document.getElementById('celCards').innerHTML = '';
   document.getElementById('simBlynk').hidden = true;
   document.getElementById('blynkValores').innerHTML = '';

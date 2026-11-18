@@ -83,3 +83,12 @@ Ao mudar a biblioteca, aumente o número em `VERSAO = "..."` para o editor reins
 - A instalação do MicroPython pelo navegador na placa real.
 
 Licença MIT, como as bibliotecas originais.
+
+## Página GreenLife (planta falante)
+
+Na categoria **Página web** há o bloco pronto **ligar página GreenLife**. Ele liga na placa a
+mesma página do programa *GreenLife – Interface Web (offline)* do gravador mannaNAUTA
+(personalidades da planta, umidade do solo, temperatura com DHT11, calibração seco/molhado e
+umidade na matriz de LEDs). Se a placa ainda não tiver rede, ela cria a rede Wi-Fi `GreenLife`;
+no celular, abra `http://192.168.4.1`. A página fica em `micropython/greenlife.html` e é gravada
+na placa junto com o programa. A calibração fica salva na placa (`greenlife.json`).

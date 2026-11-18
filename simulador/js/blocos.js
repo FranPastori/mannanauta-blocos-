@@ -121,6 +121,11 @@ Blockly.defineBlocksWithJsonArray([
   { type:'mn_pagina_iniciar', message0:'ligar página web com título %1', args0:[{type:'field_input',name:'TITULO',text:'Minha horta'}], previousStatement:null, nextStatement:null, colour:COR.pagina, tooltip:'Liga a página da placa. No celular, conecte na rede da placa e abra o endereço mostrado no monitor (normalmente http://192.168.4.1).' },
   { type:'mn_pagina_mostrar', message0:'mostrar na página %1 valor %2', args0:[{type:'field_input',name:'NOME',text:'Umidade'},{type:'input_value',name:'V'}], previousStatement:null, nextStatement:null, colour:COR.pagina, inputsInline:true, tooltip:'Cria ou atualiza um quadrinho na página com esse nome e valor.' },
   { type:'mn_endereco', message0:'endereço da página', output:'String', colour:COR.pagina },
+  { type:'mn_greenlife', message0:'🌱 ligar página GreenLife (planta falante) %1 umidade do solo no pino %2 %3 DHT11 no pino %4',
+    args0:[{type:'input_dummy'},{type:'field_dropdown',name:'SOLO',options:PINOS_ANALOGICOS},{type:'input_dummy'},
+           {type:'field_dropdown',name:'DHT',options:[['sem DHT11','-1'], ...PINOS_LIVRES]}],
+    previousStatement:null, nextStatement:null, colour:COR.pagina,
+    tooltip:'A mesma página GreenLife do gravador mannaNAUTA: a planta fala no celular conforme a umidade do solo. Se a placa ainda não tiver rede, ela cria a rede Wi-Fi "GreenLife". No celular, abra http://192.168.4.1' },
 
   // Monitor serial
   { type:'mn_escrever', message0:'escrever no monitor %1', args0:[{type:'input_value',name:'V'}], previousStatement:null, nextStatement:null, colour:COR.serial, inputsInline:true },

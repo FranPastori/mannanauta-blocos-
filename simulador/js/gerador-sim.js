@@ -171,6 +171,7 @@ g['mn_wifi_criar'] = (b) => `await S.rede.criar(${jcampo(b,'NOME')});\n`;
 g['mn_pagina_iniciar'] = (b) => `S.pagina.iniciar(${jcampo(b,'TITULO')});\n`;
 g['mn_pagina_mostrar'] = (b) => `S.pagina.mostrar(${jcampo(b,'NOME')}, ${jv(b,'V')});\n`;
 g['mn_endereco'] = () => ['S.pagina.endereco()', Js.ORDER_ATOMIC];
+g['mn_greenlife'] = (b) => `await S.pagina.greenlife(${b.getFieldValue('SOLO')}, ${b.getFieldValue('DHT')});\n`;
 
 // Monitor serial
 g['mn_escrever'] = (b) => `S.print(${jv(b,'V',Js.ORDER_NONE,'""')});\n`;

@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>GreenLife local</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;font-family:Nunito,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:#17382a;background:radial-gradient(circle at 80% 10%,#ffffff 0,#f1f8ec 40%,#e3f1dc 100%)}
+.pagina{max-width:960px;margin:0 auto;padding:18px 18px 28px}
+header{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.logo{display:flex;align-items:center;gap:8px;font-weight:900;font-size:20px;color:#1f5a35}
+.logo b{color:#4aaa63}
+.pilula{display:flex;align-items:center;gap:7px;padding:7px 13px;border:1px solid #d4e3d0;border-radius:99px;background:#fff;font-size:13px}
+.pilula i{width:9px;height:9px;border-radius:50%;background:#b8c4bd}
+.pilula.ok i{background:#4aaa63}
+.heroi{display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:center;margin-top:18px}
+h1{margin:0 0 10px;font-size:34px;line-height:1.1;color:#163a28}
+.sub{margin:0 0 16px;color:#5e7a68;font-size:16px;line-height:1.5}
+label.rot{display:block;margin-bottom:5px}
+select{width:100%;max-width:380px;padding:12px 14px;border:1px solid #d4e3d0;border-radius:14px;background:#fff;font:inherit;font-size:16px;color:#17382a}
+.chaves{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px;max-width:430px}
+.chave{position:relative;display:flex;align-items:center;gap:9px;padding:10px;border:1px solid #d4e3d0;border-radius:14px;background:#f8fbf6;cursor:pointer;user-select:none}
+.chave input{position:absolute;opacity:0;pointer-events:none}
+.trilho{position:relative;flex:0 0 42px;height:24px;border-radius:99px;background:#c8d2cc;box-shadow:inset 0 2px 5px #31513d26;transition:.2s}
+.trilho i{position:absolute;left:3px;top:3px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 2px 6px #203d2a42;transition:transform .2s}
+.chave input:checked+.trilho{background:linear-gradient(135deg,#55b765,#318d50)}
+.chave input:checked+.trilho i{transform:translateX(18px)}
+.chave b{display:block;font-size:13px}.chave small{font-size:11px;color:#6b8173}
+.visual{position:relative;aspect-ratio:1/1;max-width:440px;width:100%;margin:0 auto}
+.circulo{position:absolute;inset:4%;border-radius:50%;background:radial-gradient(circle at 50% 35%,#e0efcf,#c9e5b4)}
+.caneca{position:absolute;left:18%;top:30%;width:64%}
+.rosto{position:absolute;left:50%;top:71%;transform:translate(-50%,-50%);font-size:38px;line-height:1;z-index:3}
+.placa{position:absolute;z-index:4;text-align:center;font-weight:900;color:#17382a}
+.placa .tabua{padding:12px 14px;border:3px solid #5f9e62;border-radius:16px;background:#a3d39a;box-shadow:0 12px 24px #23472b30;font-size:15px;line-height:1.25}
+.placa .estaca{width:11px;height:120px;margin:-4px auto 0;border-radius:6px;background:linear-gradient(90deg,#7c3f22,#a5603a,#7c3f22)}
+#placaMsg{left:3%;top:10%;width:44%;transform:rotate(-4deg)}
+#placaAmb{right:3%;top:16%;width:34%;transform:rotate(5deg)}
+#placaAmb .tabua{border-color:#62a59d;background:#a9d4c8;color:#163b39;font-size:13px;padding:8px}
+#placaAmb .titulo{font-size:10px;letter-spacing:1px;padding-bottom:4px;border-bottom:1px solid #5b948c66;margin-bottom:4px}
+#placaAmb .duas{display:grid;grid-template-columns:1fr 1fr;gap:4px}
+#placaAmb .estaca{height:90px}
+.leitura{position:absolute;right:-2%;bottom:-2%;z-index:5;width:150px;padding:14px;border-radius:20px;background:#fff;text-align:center;box-shadow:0 14px 30px #23472b26}
+.leitura .num{font-size:42px;font-weight:900;color:#17382a}
+.leitura .num span{color:var(--c,#4aaa63)}
+.barra{height:7px;margin:6px 0 8px;border-radius:9px;background:#e1eae3;overflow:hidden}
+.barra i{display:block;height:100%;width:0;background:var(--c,#4aaa63);transition:width .4s}
+.estado{font-weight:800;color:var(--c,#4aaa63)}
+.controles{display:flex;gap:12px;margin-top:26px;padding:12px;border:1px solid #d4e3d0;border-radius:22px;background:#fff}
+#calibrar{flex:1;padding:14px;border:0;border-radius:14px;background:linear-gradient(135deg,#55b765,#2f874d);color:#fff;font:inherit;font-weight:900;font-size:16px;cursor:pointer}
+.matriz{display:flex;align-items:center;gap:8px;padding:0 16px;border-radius:14px;background:#eef5ec;cursor:pointer}
+#aviso{display:none;margin-top:12px;padding:12px 14px;border-radius:12px;background:#fde8e4;color:#8a3a31}
+#aviso.dica{background:#e6f3ff;color:#1d4f78}
+@media(max-width:720px){.heroi{grid-template-columns:1fr}h1{font-size:28px}.controles{flex-direction:column}.matriz{padding:12px}.leitura{width:128px}.leitura .num{font-size:34px}}
+</style>
+</head>
+<body>
+<div class="pagina">
+<header>
+  <div class="logo">🌱 Manna <b>GreenLife</b></div>
+  <div class="pilula" id="conexao"><i></i>mannaNAUTA via Wi-Fi</div>
+</header>
+<section class="heroi">
+  <div>
+    <h1>Sua planta está falando</h1>
+    <p class="sub">Leitura direta da mannaNAUTA, sem internet e sem cabo USB.</p>
+    <label class="rot" for="personalidade">Personalidade da planta</label>
+    <select id="personalidade">
+      <option value="animada">🤩 Animada</option>
+      <option value="dramatica">🎭 Dramática</option>
+      <option value="engracada">😄 Engraçada</option>
+      <option value="cientista">🔬 Cientista</option>
+      <option value="fofinha">🥰 Fofinha</option>
+      <option value="sarcastica">🙃 Sarcástica</option>
+    </select>
+    <div class="chaves">
+      <label class="chave"><input type="checkbox" id="verSolo" checked><span class="trilho"><i></i></span><span><b>Umidade do solo</b><small id="verSoloTxt">Ligada</small></span></label>
+      <label class="chave"><input type="checkbox" id="verAmb"><span class="trilho"><i></i></span><span><b>Temperatura ambiente</b><small id="verAmbTxt">Desligada</small></span></label>
+    </div>
+  </div>
+  <div class="visual">
+    <div class="circulo"></div>
+    <svg class="caneca" viewBox="0 0 200 200" aria-label="Caneca espacial GreenLife com planta">
+      <path d="M100 92 C96 60 70 40 44 46 C52 70 72 86 100 92Z" fill="#5fbf6e"/>
+      <path d="M100 92 C104 56 128 34 158 40 C150 68 128 86 100 92Z" fill="#45a85a"/>
+      <path d="M100 96 C100 70 98 40 100 22 C110 40 108 70 100 96Z" fill="#6fd07c"/>
+      <path d="M100 92 L100 60" stroke="#2f874d" stroke-width="4" stroke-linecap="round"/>
+      <path d="M150 112 h14 a22 22 0 0 1 0 44 h-14" fill="none" stroke="#e9f2f6" stroke-width="12"/>
+      <path d="M150 112 h14 a22 22 0 0 1 0 44 h-14" fill="none" stroke="#bfd3dc" stroke-width="3"/>
+      <rect x="40" y="92" width="120" height="96" rx="20" fill="#f7fbfd" stroke="#bfd3dc" stroke-width="3"/>
+      <ellipse cx="100" cy="96" rx="56" ry="9" fill="#6b4a32"/>
+      <rect x="40" y="168" width="120" height="8" fill="#1CD3F7" opacity=".85"/>
+      <g fill="#1589C6"><circle cx="58" cy="112" r="3"/><circle cx="68" cy="112" r="3"/><circle cx="78" cy="112" r="3"/></g>
+      <g fill="#FFA300"><circle cx="122" cy="112" r="3"/><circle cx="132" cy="112" r="3"/><circle cx="142" cy="112" r="3"/></g>
+    </svg>
+    <div class="placa" id="placaMsg"><div class="tabua" id="mensagem">Conectando à planta...</div><div class="estaca"></div></div>
+    <div class="placa" id="placaAmb" hidden><div class="tabua"><div class="titulo">AMBIENTE</div><div class="duas"><span id="temperatura">--°C</span><span id="umidadeAr">--%</span></div></div><div class="estaca"></div></div>
+    <div class="rosto" id="rosto">😊</div>
+    <div class="leitura" id="leitura"><div class="num"><span id="umidade">--</span>%</div><div class="barra"><i id="medidor"></i></div><div class="estado" id="estado">Aguardando leitura</div></div>
+  </div>
+</section>
+<div class="controles">
+  <button id="calibrar">Calibrar sensor</button>
+  <label class="matriz"><input type="checkbox" id="matriz"> Exibir umidade na matriz</label>
+</div>
+<div id="aviso"></div>
+</div>
+<script>
+const $ = (id) => document.getElementById(id);
+const FALAS = {
+  animada: ['Socorro, estou com muita sede!', 'Uma aguinha cairia muito bem!', 'Uhuuul! Minha umidade está perfeita!', 'Opa, já estou bem molhada!', 'Tem água demais por aqui!'],
+  dramatica: ['Estou definhando dramaticamente!', 'Minha sede é uma tragédia!', 'Finalmente, equilíbrio e paz!', 'Começa o dilúvio!', 'Salvem-me desta inundação!'],
+  engracada: ['Mais seca que piada sem graça!', 'Cadê meu copo d’água?', 'Hoje eu estou verdemente ótima!', 'Devagar com esse regador!', 'Alguém chamou um barco?'],
+  cientista: ['Umidade em nível crítico.', 'Recomendo irrigação moderada.', 'Condição hídrica ideal.', 'Umidade acima do recomendado.', 'Saturação do solo detectada.'],
+  fofinha: ['Uma gotinha, por favorzinho!', 'Estou com um pouquinho de sede.', 'Estou feliz e hidratada!', 'Já estou bem molhadinha.', 'Minhas raízes estão nadando!'],
+  sarcastica: ['Água? Nunca ouvi falar.', 'Eu sobrevivo só com carinho, claro.', 'Milagre: a umidade está perfeita.', 'Talvez já seja água suficiente.', 'Excelente, agora virei planta aquática.']
+};
+const FALAS_TEMP = {
+  animada: ['Brrr! Está bem frio por aqui!', 'Clima fresquinho! Vamos aproveitar!', 'Temperatura gostosa! Estou cheia de energia!', 'Uau, hoje está quente! Uma sombra cairia bem!'],
+  dramatica: ['Está congelante! Minhas folhas estão tremendo!', 'Que friozinho dramático por aqui!', 'A temperatura está perfeita para o meu grande momento!', 'Está muito quente! Estou quase derretendo!'],
+  engracada: ['Alguém viu meu cachecol de folhas?', 'Friozinho bom para um chá de adubo!', 'Clima perfeito: nem forno, nem geladeira!', 'Está tão quente que minhas folhas pediram ventilador!'],
+  cientista: ['Temperatura entre 0 e 10 graus: ambiente muito frio.', 'Temperatura entre 10 e 20 graus: ambiente fresco.', 'Temperatura entre 20 e 30 graus: ambiente agradável.', 'Temperatura entre 30 e 40 graus: ambiente quente.'],
+  fofinha: ['Está tão frio... posso ganhar um cobertorzinho?', 'Que friozinho gostoso nas minhas folhinhas!', 'O clima está uma delícia para crescer feliz!', 'Está quentinho demais para minhas folhinhas!'],
+  sarcastica: ['Perfeito, agora só falta começar a nevar.', 'Um friozinho, porque conforto seria pedir demais.', 'Olha só, uma temperatura realmente agradável.', 'Excelente, virei planta assada ao sol.']
+};
+const ESTADOS = ['Muito seca', 'Seca', 'Ideal', 'Muito molhada', 'Encharcada'];
+const ROSTOS = ['😵', '😟', '😊', '😮', '🥶'];
+const CORES = ['#d65b4f', '#e79a45', '#4aaa63', '#4e9bd6', '#557ac8'];
+const BOTAO = { dry: 'Registrar sensor seco', wet: 'Registrar sensor molhado', done: 'Calibrar novamente', error: 'Repetir calibração' };
+const DICA = {
+  dry: 'Calibração: deixe o sensor seco, fora da terra, e toque em "Registrar sensor seco".',
+  wet: 'Agora coloque a ponta do sensor num copo com água e toque em "Registrar sensor molhado".',
+  done: 'Sensor calibrado! Pode colocar o sensor de volta na terra.',
+  error: 'As leituras seco e molhado ficaram muito parecidas. Confira os fios e repita a calibração.'
+};
+let ultimo = null;
+
+function guardar(k, v) { try { localStorage.setItem('greenlife.' + k, v); } catch (e) {} }
+function lembrar(k) { try { return localStorage.getItem('greenlife.' + k); } catch (e) { return null; } }
+
+// No simulador da plataforma, quem responde é o simulador (a página fica dentro dele).
+async function pedir(url, corpo) {
+  if (window.parent !== window && window.parent.mnGreenLife) return window.parent.mnGreenLife(url, corpo);
+  const r = await fetch(url, corpo ? { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(corpo), cache: 'no-store' } : { cache: 'no-store' });
+  if (!r.ok) throw new Error('Erro ' + r.status);
+  return r.json();
+}
+
+function aviso(texto, tipo) {
+  const a = $('aviso');
+  a.textContent = texto || '';
+  a.className = tipo || '';
+  a.style.display = texto ? 'block' : 'none';
+}
+
+function faixa(h) { return h < 25 ? 0 : h < 45 ? 1 : h < 70 ? 2 : h < 90 ? 3 : 4; }
+function faixaTemp(t) { return t < 10 ? 0 : t < 20 ? 1 : t < 30 ? 2 : 3; }
+
+function desenhar() {
+  const s = ultimo;
+  if (!s) return;
+  const p = $('personalidade').value;
+  const verSolo = $('verSolo').checked, verAmb = $('verAmb').checked;
+  $('verSoloTxt').textContent = verSolo ? 'Ligada' : 'Desligada';
+  $('verAmbTxt').textContent = verAmb ? 'Ligada' : 'Desligada';
+  $('leitura').style.display = verSolo ? '' : 'none';
+  $('placaAmb').hidden = !(verSolo && verAmb);
+
+  let msg = 'Ligue um dos sensores para eu falar!', rosto = '😊';
+  const soloOk = s.soilAvailable && typeof s.humidity === 'number';
+  if (verSolo) {
+    if (soloOk) {
+      const f = faixa(s.humidity);
+      $('leitura').style.setProperty('--c', CORES[f]);
+      $('umidade').textContent = Math.round(s.humidity);
+      $('medidor').style.width = Math.max(0, Math.min(100, s.humidity)) + '%';
+      $('estado').textContent = s.calibrated ? ESTADOS[f] : ESTADOS[f] + ' · sensor não calibrado';
+      msg = FALAS[p][f]; rosto = ROSTOS[f];
+    } else {
+      $('leitura').style.setProperty('--c', '#8a978f');
+      $('umidade').textContent = '--';
+      $('medidor').style.width = '0';
+      $('estado').textContent = 'Sensor não conectado';
+      msg = 'Sensor do solo não conectado.'; rosto = '😶';
+    }
+  }
+  const ambOk = s.dhtAvailable && typeof s.temperature === 'number';
+  if (verAmb) {
+    $('temperatura').textContent = ambOk ? s.temperature.toFixed(1) + '°C' : '--°C';
+    $('umidadeAr').textContent = ambOk && typeof s.airHumidity === 'number' ? s.airHumidity.toFixed(1) + '%' : '--%';
+    if (!verSolo) {
+      if (ambOk) { const t = faixaTemp(s.temperature); msg = FALAS_TEMP[p][t]; rosto = ['🥶', '😌', '😊', '🥵'][t]; }
+      else { msg = 'Sensor de temperatura não conectado.'; rosto = '😶'; }
+    }
+  }
+  $('mensagem').textContent = msg;
+  $('rosto').textContent = rosto;
+  $('matriz').checked = !!s.displayHumidity;
+  $('calibrar').textContent = BOTAO[s.calibrationStage] || 'Calibrar sensor';
+  if (DICA[s.calibrationStage]) aviso(DICA[s.calibrationStage], s.calibrationStage === 'error' ? '' : 'dica');
+  else aviso('');
+}
+
+async function atualizar() {
+  try {
+    ultimo = await pedir('/api/status');
+    $('conexao').classList.add('ok');
+    desenhar();
+  } catch (e) {
+    $('conexao').classList.remove('ok');
+    aviso('A mannaNAUTA não respondeu. Recarregue a página.');
+  }
+}
+
+async function comando(dados) {
+  try {
+    ultimo = await pedir('/api/control', Object.assign({ device: 'mannaNAUTA', type: 'greenlife-control' }, dados));
+    desenhar();
+  } catch (e) {
+    aviso('Falha ao enviar comando.');
+  }
+}
+
+$('personalidade').value = lembrar('personalidade') || 'animada';
+$('verSolo').checked = lembrar('solo') !== 'nao';
+$('verAmb').checked = lembrar('ambiente') === 'sim';
+$('personalidade').onchange = () => { guardar('personalidade', $('personalidade').value); desenhar(); };
+$('verSolo').onchange = () => { guardar('solo', $('verSolo').checked ? 'sim' : 'nao'); desenhar(); };
+$('verAmb').onchange = () => { guardar('ambiente', $('verAmb').checked ? 'sim' : 'nao'); desenhar(); };
+$('calibrar').onclick = () => comando({ calibration: 'next' });
+$('matriz').onchange = () => comando({ displayHumidity: $('matriz').checked });
+atualizar();
+setInterval(atualizar, 2000);
+</script>
+</body>
+</html>

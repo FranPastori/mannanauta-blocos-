@@ -5,7 +5,7 @@
 # Também traz: leitura analógica, Wi-Fi, envio de dados para o Blynk e uma página web própria da placa.
 # Os desenhos de letras, números, símbolos e carinhas são os mesmos da biblioteca original.
 
-VERSAO = "9"
+VERSAO = "10"
 
 import math
 import time
@@ -715,6 +715,30 @@ def _dados():
     return json.dumps({"titulo": pg["titulo"], "itens": [[n, pg["valores"].get(n, "")] for n in pg["nomes"]]})
 
 
+def _enviar(cli, corpo, tipo, status="200 OK"):
+    if isinstance(corpo, str):
+        corpo = corpo.encode()
+    cli.send(("HTTP/1.0 %s\r\nContent-Type: %s\r\nContent-Length: %d\r\nCache-Control: no-store\r\nConnection: close\r\n\r\n" % (status, tipo, len(corpo))).encode())
+    for i in range(0, len(corpo), 1024):
+        cli.send(corpo[i:i + 1024])
+
+
+def _enviar_arquivo(cli, nome, tipo):
+    import os
+    try:
+        tam = os.stat(nome)[6]
+    except OSError:
+        _enviar(cli, "Arquivo " + nome + " não encontrado na placa. Envie o programa de novo pela plataforma.", "text/plain; charset=utf-8", "404 Not Found")
+        return
+    cli.send(("HTTP/1.0 200 OK\r\nContent-Type: %s\r\nContent-Length: %d\r\nCache-Control: no-store\r\nConnection: close\r\n\r\n" % (tipo, tam)).encode())
+    with open(nome, "rb") as f:
+        while True:
+            bloco = f.read(1024)
+            if not bloco:
+                break
+            cli.send(bloco)
+
+
 def _servidor():
     import socket
     srv = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -731,19 +755,33 @@ def _servidor():
             cli, _ = srv.accept()
             cli.settimeout(3)
             pedido = cli.recv(1024)
-            linha = pedido.split(b"\r\n", 1)[0].decode()
-            caminho = linha.split(" ")[1] if " " in linha else "/"
+            cab, _, corpo = pedido.partition(b"\r\n\r\n")
+            linha = cab.split(b"\r\n", 1)[0].decode()
+            partes = linha.split(" ")
+            caminho = partes[1] if len(partes) > 1 else "/"
+            tam = 0
+            for l in cab.split(b"\r\n"):
+                if l.lower().startswith(b"content-length:"):
+                    tam = int(l.split(b":")[1])
+            while len(corpo) < tam:
+                mais = cli.recv(512)
+                if not mais:
+                    break
+                corpo += mais
+            gl = sys.modules.get("_mn_greenlife")
             if caminho.startswith("/dados"):
-                corpo, tipo = _dados(), "application/json"
+                _enviar(cli, _dados(), "application/json")
+            elif caminho.startswith("/api/status") and gl:
+                _enviar(cli, _gl_status(), "application/json")
+            elif caminho.startswith("/api/control") and gl:
+                _enviar(cli, _gl_controle(corpo), "application/json")
             elif caminho == "/" or caminho.startswith("/?"):
-                corpo, tipo = _HTML, "text/html; charset=utf-8"
+                if gl and gl.get("ligado"):
+                    _enviar_arquivo(cli, "greenlife.html", "text/html; charset=utf-8")
+                else:
+                    _enviar(cli, _HTML, "text/html; charset=utf-8")
             else:
-                cli.send(b"HTTP/1.0 404 Not Found\r\nContent-Length: 0\r\n\r\n")
-                continue
-            dados = corpo.encode()
-            cli.send(("HTTP/1.0 200 OK\r\nContent-Type: %s\r\nContent-Length: %d\r\nCache-Control: no-store\r\nConnection: close\r\n\r\n" % (tipo, len(dados))).encode())
-            for i in range(0, len(dados), 1024):
-                cli.send(dados[i:i + 1024])
+                _enviar(cli, "", "text/plain", "404 Not Found")
         except Exception:
             pass
         finally:
@@ -754,13 +792,127 @@ def _servidor():
                     pass
 
 
-def pagina_iniciar(titulo="mannaNAUTA"):
-    """Liga a página web da placa. Ela funciona em segundo plano, junto com o programa."""
-    _pg["titulo"] = str(titulo)
+def _ligar_servidor():
     if _pg["ligado"]:
-        print("Página web ligada! Abra no celular:", endereco_pagina())
         return
     import _thread
     _thread.start_new_thread(_servidor, ())
     _pg["ligado"] = True
+
+
+def pagina_iniciar(titulo="mannaNAUTA"):
+    """Liga a página web da placa. Ela funciona em segundo plano, junto com o programa."""
+    _pg["titulo"] = str(titulo)
+    gl = sys.modules.get("_mn_greenlife")
+    if gl:
+        gl["ligado"] = False
+    _ligar_servidor()
     print("Página web ligada! Abra no celular:", endereco_pagina())
+
+
+# ------------------------------------------------- Página GreenLife (planta falante)
+# Mesma página e mesmos comandos do programa "GreenLife - Interface Web (offline)" do gravador
+# mannaNAUTA: GET /api/status e POST /api/control. A página fica no arquivo greenlife.html.
+_gl = sys.modules.get("_mn_greenlife")
+if not isinstance(_gl, dict):
+    _gl = {"ligado": False, "solo": 1, "dht": -1, "seco": 3000, "molhado": 1300, "calibrado": False,
+           "etapa": "", "matriz": False, "leitura": 0, "dht_t": 0}
+    try:
+        import json
+        with open("greenlife.json") as f:
+            c = json.load(f)
+        _gl["seco"], _gl["molhado"], _gl["calibrado"] = int(c["seco"]), int(c["molhado"]), True
+    except Exception:
+        pass
+    sys.modules["_mn_greenlife"] = _gl
+else:
+    _gl["ligado"], _gl["matriz"], _gl["etapa"] = False, False, ""
+_gl_mat = None
+
+
+def _gl_matriz(h, ok):
+    global _gl_mat
+    if _gl_mat is None:
+        _gl_mat = Matriz()
+    if not _gl["matriz"] or not ok:
+        _gl_mat.limpar()
+        return
+    f = 0 if h < 25 else 1 if h < 45 else 2 if h < 70 else 3 if h < 90 else 4
+    cor = (0xD65B4F, 0xE79A45, 0x4AAA63, 0x4E9BD6, 0x557AC8)[f]
+    acesos = (int(h) * 25 + 50) // 100
+    for i in range(25):
+        # enche de baixo para cima, como um copo
+        _gl_mat.preparar(24 - i, cor if i < acesos else 0)
+    _gl_mat.mostrar()
+
+
+def _gl_status():
+    import json
+    gl = _gl
+    leitura = leitura_analogica(gl["solo"])
+    gl["leitura"] = leitura
+    solo_ok = leitura > 100  # pino solto lê quase zero
+    umidade = _limitar(mapear(leitura, gl["seco"], gl["molhado"], 0, 100), 0, 100)
+    st = {"soilAvailable": solo_ok, "humidity": int(umidade) if solo_ok else None,
+          "calibrated": gl["calibrado"], "displayHumidity": gl["matriz"],
+          "calibrationStage": gl["etapa"], "dhtAvailable": False, "temperature": None, "airHumidity": None}
+    if gl["dht"] >= 0:
+        try:
+            import dht
+            d = _dhts.get(gl["dht"])
+            if d is None:
+                d = _dhts[gl["dht"]] = [dht.DHT11(Pin(gl["dht"])), 0, 0.0, 0.0]
+            agora = time.ticks_ms()
+            if d[1] == 0 or time.ticks_diff(agora, d[1]) >= 2000:
+                d[0].measure()
+                d[2], d[3] = d[0].temperature(), d[0].humidity()
+                d[1] = agora
+            st["dhtAvailable"], st["temperature"], st["airHumidity"] = True, float(d[2]), float(d[3])
+        except Exception:
+            pass
+    try:
+        _gl_matriz(umidade, solo_ok)
+    except Exception:
+        pass
+    return json.dumps(st)
+
+
+def _gl_controle(corpo):
+    import json
+    try:
+        c = json.loads(corpo)
+    except Exception:
+        c = {}
+    gl = _gl
+    if "displayHumidity" in c:
+        gl["matriz"] = bool(c["displayHumidity"])
+    if c.get("calibration") == "next":
+        leitura = leitura_analogica(gl["solo"])
+        if gl["etapa"] == "dry":
+            gl["seco_novo"] = leitura
+            gl["etapa"] = "wet"
+            print("GreenLife: leitura seco =", leitura)
+        elif gl["etapa"] == "wet":
+            seco = gl.get("seco_novo", gl["seco"])
+            print("GreenLife: leitura molhado =", leitura)
+            if abs(seco - leitura) < 300:
+                gl["etapa"] = "error"
+            else:
+                gl["seco"], gl["molhado"], gl["calibrado"], gl["etapa"] = seco, leitura, True, "done"
+                try:
+                    with open("greenlife.json", "w") as f:
+                        json.dump({"seco": seco, "molhado": leitura}, f)
+                except Exception:
+                    pass
+        else:
+            gl["etapa"] = "dry"
+    return _gl_status()
+
+
+def greenlife_iniciar(pino_solo=1, pino_dht=-1):
+    """Liga a página GreenLife: a planta fala no celular conforme a umidade do solo (e a temperatura, com DHT11)."""
+    _gl["solo"], _gl["dht"], _gl["ligado"] = int(pino_solo), int(pino_dht), True
+    if not ((_ap is not None and _ap.active()) or wifi_conectado()):
+        wifi_criar("GreenLife")
+    _ligar_servidor()
+    print("Página GreenLife ligada! No celular, entre na rede da placa e abra:", endereco_pagina())

@@ -197,6 +197,7 @@ f['mn_wifi_criar'] = (b) => `wifi_criar(${JSON.stringify(b.getFieldValue('NOME')
 f['mn_pagina_iniciar'] = (b) => `pagina_iniciar(${JSON.stringify(b.getFieldValue('TITULO'))})\n`;
 f['mn_pagina_mostrar'] = (b) => `pagina_mostrar(${JSON.stringify(b.getFieldValue('NOME'))}, ${v(b,'V')})\n`;
 f['mn_endereco'] = () => ['endereco_pagina()', Py.ORDER_ATOMIC];
+f['mn_greenlife'] = (b) => `greenlife_iniciar(${b.getFieldValue('SOLO')}, ${b.getFieldValue('DHT')})\n`;
 
 // Monitor serial
 f['mn_escrever'] = (b) => `print(${v(b,'V',Py.ORDER_NONE,'""')})\n`;

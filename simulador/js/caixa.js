@@ -84,6 +84,9 @@ const toolbox = {
       {kind:'block',type:'mn_wifi_ok'}
     ]},
     { kind:'category', name:'Página web', colour:COR.pagina, contents:[
+      {kind:'label',text:'Página pronta: planta falante'},
+      {kind:'block',type:'mn_greenlife'},
+      {kind:'label',text:'Monte a sua página'},
       {kind:'block',type:'mn_wifi_criar'},
       {kind:'block',type:'mn_pagina_iniciar'},
       {kind:'block',type:'mn_pagina_mostrar',fields:{NOME:'Umidade (%)'},inputs:{V:{block:{type:'mn_limitar',
